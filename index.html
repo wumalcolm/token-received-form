@@ -502,7 +502,7 @@ function buildPDFHTML(sub, key) {
       <tr><td style="padding:3px 0;">Program Date</td><td style="padding:3px 0;">: &nbsp;${programDate}${duration?' &nbsp;('+duration+')':''}</td></tr>
       <tr><td style="padding:3px 0;">Role</td><td style="padding:3px 0;">: &nbsp;${r.Role||'-'}</td></tr>
     </table>
-    <div style="font-size:11px;margin-bottom:18px;line-height:2.2;">I, <u>&nbsp;&nbsp;${r.Name}&nbsp;&nbsp;</u> acknowledge received a total of <strong><u>${r.Amount||'-'}</u></strong> on the <u>&nbsp;&nbsp;${programDate}&nbsp;&nbsp;</u>.</div>
+    <div style="font-size:11px;margin-bottom:32px;line-height:2.2;">I, <u>&nbsp;&nbsp;${r.Name}&nbsp;&nbsp;</u> acknowledge received a total of <strong><u>${r.Amount||'-'}</u></strong> on the <u>&nbsp;&nbsp;${programDate}&nbsp;&nbsp;</u>.</div>
     <div style="display:flex;gap:40px;margin-bottom:18px;">
       <div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:28px;">Verified By:</div><div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div><div style="font-size:10px;line-height:1.6;">Malcolm Wu<br/>Strategic Manager</div></div>
       <div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:28px;">Approved By:</div><div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div><div style="font-size:10px;line-height:1.6;">Melvin Liew<br/>CEO</div></div>
@@ -518,7 +518,7 @@ function buildPDFHTML(sub, key) {
       <div style="flex:1;">
         <div style="font-size:11px;font-weight:700;margin-bottom:6px;">Transfer Receipt:</div>
         ${receiptImg
-          ? `<div style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;max-width:220px;"><img src="${receiptImg}" style="width:100%;max-height:150px;object-fit:contain;display:block;" /></div>`
+          ? `<div style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;max-width:220px;"><img src="${receiptImg}" style="width:100%;max-height:240px;object-fit:contain;display:block;background:#fff;" /></div>`
           : '<div style="width:220px;height:120px;border:1.5px dashed #cbd5e1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8fafc;"><div style="font-size:20px;">🧾</div><div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:4px;">No receipt uploaded</div></div>'
         }
       </div>
