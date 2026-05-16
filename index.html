@@ -607,6 +607,7 @@ function buildPDFHTML(sub, key) {
   const programDate = r['Program Date'] || r.Date || '-';
   const duration = r['Duration'] || '';
   const formattedDate = sub.timestamp ? new Date(sub.timestamp).toLocaleString('en-MY', { dateStyle: 'long', timeStyle: 'short' }) : '-';
+  const receiptImg = transferReceipts[key] || '';
 
   return `
   <div style="font-family:Arial,sans-serif;width:210mm;min-height:297mm;padding:16mm 18mm 20mm 18mm;box-sizing:border-box;background:#fff;color:#000;position:relative;">
