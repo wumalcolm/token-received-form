@@ -219,7 +219,7 @@ let hasSigned = false;
 // HARDCODED CONFIG - update these when needed
 // =============================================
 const DEFAULT_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Zzpn--zk4SAApAp_Cwo3ogDmRnNa3Ku7i77wQbp1D-4/export?format=csv&gid=0';
-const DEFAULT_WEBHOOK_URL = '';
+const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwl2sIXAxkroNzRfQ9gTOi2AHg-lCNoHm6JG09zr0YjLpBhGUqKIh1uTrtC_CN5nN2D/exec';
 
 window.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
@@ -247,6 +247,33 @@ async function autoLoadCSV(url) {
       localStorage.setItem('icube_recipients', JSON.stringify(recipients));
     }
   } catch (e) { /* silently continue - use cached data if available */ }
+  // Also fetch submissions from Google Sheet
+  await syncSubmissionsFromSheet();
+}
+
+async function syncSubmissionsFromSheet() {
+  const webhook = localStorage.getItem('icube_webhook_url') || DEFAULT_WEBHOOK_URL;
+  if (!webhook) return;
+  try {
+    const res = await fetch(webhook, { method: 'GET', mode: 'cors' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
+    data.forEach(sub => {
+      if (!sub.name) return;
+      const key = sub.name.toLowerCase().trim();
+      // Only update if not already in local submissions or if sheet has newer data
+      if (!submissions[key]) {
+        submissions[key] = {
+          name: sub.name,
+          signature: sub.signature || '',
+          timestamp: sub.timestamp || '',
+          recipient: recipients.find(r => r.Name.toLowerCase().trim() === key) || { Name: sub.name }
+        };
+      }
+    });
+    localStorage.setItem('icube_submissions', JSON.stringify(submissions));
+  } catch (e) { /* silently continue */ }
 }
 
 function loadFromStorage() {
@@ -391,6 +418,8 @@ async function submitForm() {
       await fetch(webhook, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: currentRecipient.Name, timestamp, signature: sigData }) });
     } catch (e) {}
   }
+  // Sync submissions from sheet after submitting
+  await syncSubmissionsFromSheet();
   document.getElementById('stepSign').classList.add('hidden');
   document.getElementById('stepThankYou').classList.remove('hidden');
 }
@@ -401,7 +430,7 @@ function checkPin() {
   if (input === storedPin) {
     document.getElementById('adminPinGate').classList.add('hidden');
     document.getElementById('adminDashboard').classList.remove('hidden');
-    renderTable(); updateStats();
+    syncSubmissionsFromSheet().then(() => { renderTable(); updateStats(); });
   } else { document.getElementById('pinError').classList.remove('hidden'); }
 }
 
