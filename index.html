@@ -479,13 +479,14 @@ function getSignatureData() { return document.getElementById('signatureCanvas').
 // =============================================
 // SUBMIT
 // =============================================
+
 async function submitForm() {
   if (!hasSigned) { showToast('Please draw your signature before submitting.', 'warn'); return; }
   const key = currentRecipient.Name.toLowerCase().trim();
   const sigData = getSignatureData();
   const timestamp = new Date().toISOString();
 
-  const webhook = localStorage.getItem('icube_webhook_url') || DEFAULT_WEBHOOK_URL;
+  const webhook = DEFAULT_WEBHOOK_URL;
   if (webhook) {
     try {
       fetch(webhook, {
@@ -497,7 +498,6 @@ async function submitForm() {
     } catch (e) {}
   }
 
-  // Save locally as well
   submissions[key] = { name: currentRecipient.Name, signature: sigData, timestamp, fromSheet: true, recipient: currentRecipient };
   localStorage.setItem('icube_submissions', JSON.stringify(submissions));
 
@@ -505,9 +505,6 @@ async function submitForm() {
   document.getElementById('stepThankYou').classList.remove('hidden');
 }
 
-// =============================================
-// ADMIN: PIN
-// =============================================
 function checkPin() {
   const input = document.getElementById('adminPinInput').value;
   const storedPin = localStorage.getItem('icube_pin') || '1234';
@@ -533,18 +530,14 @@ function changePin() {
   showToast('PIN updated successfully.', 'success');
 }
 
-// =============================================
-// ADMIN: CONFIG & CSV
-// =============================================
 function saveConfig() {
   localStorage.setItem('icube_webhook_url', DEFAULT_WEBHOOK_URL);
 }
 
 async function loadCSV() {
-  const url = document.getElementById('csvUrl').value.trim();
-  if (!url) { showToast('Please enter a CSV URL first.', 'warn'); return; }
-  localStorage.setItem('icube_csv_url', url);
-  showToast('Loading data…', 'info');
+  const url = localStorage.getItem('icube_csv_url') || DEFAULT_CSV_URL;
+  if (!url) { showToast('No CSV URL configured.', 'warn'); return; }
+  showToast('Loading data...', 'info');
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Fetch failed');
@@ -553,8 +546,8 @@ async function loadCSV() {
     localStorage.setItem('icube_recipients', JSON.stringify(recipients));
     await syncSubmissionsFromSheet();
     renderTable(); updateStats();
-    showToast(`Loaded ${recipients.length} recipients.`, 'success');
-  } catch (e) { showToast('Failed to load CSV. Check the URL and sharing settings.', 'error'); }
+    showToast('Loaded ' + recipients.length + ' recipients.', 'success');
+  } catch (e) { showToast('Failed to load CSV. Check URL and sharing settings.', 'error'); }
 }
 
 function parseCSV(text) {
@@ -576,9 +569,6 @@ function parseCSV(text) {
   }).filter(r => r.Name && r.Name.trim());
 }
 
-// =============================================
-// ADMIN: TABLE
-// =============================================
 function renderTable() {
   const query = (document.getElementById('tableSearch')?.value || '').toLowerCase();
   const tbody = document.getElementById('recipientTableBody');
@@ -594,6 +584,7 @@ function renderTable() {
     const sub = submissions[key];
     const hub = (r.Hub || '').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
     const hubColor = hub === 'SIC' ? 'text-teal-700 bg-teal-50' : 'text-green-900 bg-green-50';
+    const hasReceipt = !!transferReceipts[key];
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="font-medium">${r.Name}</td>
@@ -604,22 +595,22 @@ function renderTable() {
       <td class="text-slate-600">${r.Role || '-'}</td>
       <td class="font-semibold">${r.Amount || '-'}</td>
       <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${sub ? 'badge-submitted' : 'badge-pending'}">${sub ? 'Submitted' : 'Pending'}</span></td>
-      <td>${sub ? `<img src="${sub.signature}" title="Signature" style="height:32px;width:80px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff" />` : '<span class="text-slate-300 text-xs">—</span>'}</td>
+      <td>${sub ? '<img src="' + sub.signature + '" title="Signature" style="height:32px;width:80px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff" />' : '<span class="text-slate-300 text-xs">—</span>'}</td>
       <td>
         ${sub ? `
-          <div style="display:flex;flex-direction:column;gap:4px;min-width:80px;">
-            <label style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.7rem;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid ${transferReceipts[key] ? '#bbf7d0' : '#bfdbfe'};background:${transferReceipts[key] ? '#f0fdf4' : '#eff6ff'};color:${transferReceipts[key] ? '#15803d' : '#1d4ed8'};">
-              ${transferReceipts[key] ? '✓ Receipt' : '⬆ Receipt'}
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:76px;">
+            <label style="cursor:pointer;display:block;text-align:center;font-size:0.68rem;font-weight:600;padding:3px 6px;border-radius:6px;border:1px solid ${hasReceipt ? '#bbf7d0' : '#bfdbfe'};background:${hasReceipt ? '#f0fdf4' : '#eff6ff'};color:${hasReceipt ? '#15803d' : '#1d4ed8'};">
+              ${hasReceipt ? '✓ Receipt' : '⬆ Receipt'}
               <input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadReceipt('${key}', this)" />
             </label>
-            <button onclick='downloadSinglePDF(${JSON.stringify(key)})' style="font-size:0.7rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">⬇ PDF</button>
+            <button onclick='downloadSinglePDF(${JSON.stringify(key)})' style="font-size:0.68rem;font-weight:600;padding:3px 6px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;text-align:center;">⬇ PDF</button>
           </div>
         ` : '<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
       </td>
     `;
     tbody.appendChild(tr);
   });
-  if (filtered.length === 0) tbody.innerHTML = `<tr><td colspan="10" class="text-center text-slate-400 py-8 text-sm">No recipients found.</td></tr>`;
+  if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="10" class="text-center text-slate-400 py-8 text-sm">No recipients found.</td></tr>';
 }
 
 function updateStats() {
@@ -630,158 +621,23 @@ function updateStats() {
   document.getElementById('statPending').textContent = total - submitted;
 }
 
-// =============================================
-// PDF — matches official Token Received template
-// =============================================
-function buildPDFHTML(sub, key) {
-  const r = sub.recipient;
-  const hub = (r.Hub || '').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
-  const logoSrc = hub === 'SIC'
-    ? 'https://wumalcolm.github.io/token-received-form/Logo-SIC.png'
-    : 'https://wumalcolm.github.io/token-received-form/Logo-BDIH.png';
-  const footerHTML = hub === 'SIC'
-    ? '<strong>SMA | Sarikei Innovation Center</strong><br/>Jalan Nyelong, Bandar Sarikei, 96100 Sarikei, Sarawak<br/>M: +6017 2622101 &nbsp; E: admin@sarikeiinnovation.com &nbsp; W: www.sarikeiinnovation.com'
-    : '<strong>Betong Digital Innovation Hub</strong><br/>1st &amp; 2nd Floor, Sublot 21, Lot 2079, Block 9, Batu Api Land District,<br/>Medan Bandar Baru, 95700 Betong, Sarawak.';
-  const programDate = r['Program Date'] || r.Date || '-';
-  const duration = r['Duration'] || '';
-  const formattedDate = sub.timestamp ? new Date(sub.timestamp).toLocaleString('en-MY', { dateStyle: 'long', timeStyle: 'short' }) : '-';
-  const receiptLink = transferReceipts[key] || '';
-  const receiptImg = receiptLink;
-
-  return `
-  <div style="font-family:Arial,sans-serif;width:794px;height:1123px;padding:32px 60px 20px 60px;box-sizing:border-box;background:#fff;color:#000;display:flex;flex-direction:column;">
-
-    <!-- Logo -->
-    <div style="margin-bottom:14px;">
-      <img src="${logoSrc}" style="height:52px;max-width:190px;object-fit:contain;" />
-    </div>
-
-    <!-- Title -->
-    <div style="font-size:26px;font-weight:400;margin-bottom:16px;letter-spacing:-0.3px;">Token Received</div>
-
-    <!-- Program Details -->
-    <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;">
-      <tr>
-        <td style="width:34%;padding:3px 0;vertical-align:top;">Program Name</td>
-        <td style="padding:3px 0;vertical-align:top;">: &nbsp;<strong>${r['Program Name'] || r.Program || '-'}</strong></td>
-      </tr>
-      <tr>
-        <td style="padding:3px 0;vertical-align:top;">Program Date</td>
-        <td style="padding:3px 0;vertical-align:top;">: &nbsp;${programDate}${duration ? ' &nbsp;(' + duration + ')' : ''}</td>
-      </tr>
-      <tr>
-        <td style="padding:3px 0;vertical-align:top;">Role</td>
-        <td style="padding:3px 0;vertical-align:top;">: &nbsp;${r.Role || '-'}</td>
-      </tr>
-    </table>
-
-    <!-- Declaration -->
-    <div style="font-size:11px;margin-bottom:18px;line-height:2;">
-      I, <u>&nbsp;&nbsp;${r.Name}&nbsp;&nbsp;</u>
-      acknowledge received a total of <strong><u>${r.Amount || '-'}</u></strong> on
-      the <u>&nbsp;&nbsp;${programDate}&nbsp;&nbsp;</u>.
-    </div>
-
-    <!-- Verified By + Approved By -->
-    <div style="display:flex;gap:40px;margin-bottom:18px;">
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:30px;">Verified By:</div>
-        <div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div>
-        <div style="font-size:10px;line-height:1.6;">Malcolm Wu<br/>Strategic Manager</div>
-      </div>
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:30px;">Approved By:</div>
-        <div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div>
-        <div style="font-size:10px;line-height:1.6;">Melvin Liew<br/>CEO</div>
-      </div>
-    </div>
-
-    <!-- Received By + Transfer Receipt -->
-    <div style="display:flex;gap:30px;align-items:flex-start;margin-bottom:0;">
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:4px;">Received By:</div>
-        <div style="height:52px;display:flex;align-items:flex-end;">
-          <img src="${sub.signature}" style="max-height:50px;max-width:160px;object-fit:contain;display:block;" />
-        </div>
-        <div style="border-bottom:1px solid #000;width:170px;margin-bottom:4px;">&nbsp;</div>
-        <div style="font-size:10px;">Name: ${r.Name}</div>
-        <div style="font-size:9px;color:#555;margin-top:2px;">Digitally signed on ${formattedDate}</div>
-      </div>
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:6px;">Transfer Receipt:</div>
-        ${receiptImg
-          ? '<div style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08);max-width:220px;"><img src="' + receiptImg + '" style="width:100%;max-height:145px;object-fit:contain;display:block;" /></div>'
-          : '<div style="width:220px;height:120px;border:1.5px dashed #cbd5e1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8fafc;gap:5px;"><div style="font-size:20px;">&#x1F9FE;</div><div style="font-size:9px;color:#94a3b8;text-align:center;line-height:1.6;">Transfer receipt<br/>not yet uploaded</div></div>'
-        }
-      </div>
-    </div>
-
-    <!-- Spacer -->
-    <div style="flex:1;"></div>
-
-    <!-- Footer -->
-    <div style="border-top:1px solid #ccc;padding-top:8px;text-align:center;font-size:8.5px;color:#555;line-height:1.8;width:100%;">
-      ${footerHTML}
-    </div>
-
-  </div>`;
+function updateHubBranding(hub) {
+  const area = document.getElementById('hubLogoArea');
+  if (hub === 'SIC') {
+    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#0d7d8a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;">SIC</div><div style="text-align:right;"><div style="font-size:10px;font-weight:700;color:#0d7d8a;">SARIKEI</div><div style="font-size:9px;color:#888;">Innovation Center</div></div></div>';
+  } else {
+    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#1a3a2a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;">BDIH</div><div style="text-align:right;"><div style="font-size:10px;font-weight:700;color:#1a3a2a;">BETONG</div><div style="font-size:9px;color:#888;">Digital Innovation Hub</div></div></div>';
+  }
 }
-async function uploadReceipt(key, input) {
-  const file = input.files[0];
-  if (!file) { showToast('No file selected.', 'warn'); return; }
 
-  showToast('Reading file...', 'info');
-
-  // Use FileReader - works on all mobile browsers
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const dataUrl = e.target.result;
-
-      // Compress via canvas
-      const img = new Image();
-      img.onload = function() {
-        try {
-          const maxW = 500;
-          const scale = Math.min(1, maxW / img.width);
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.round(img.width * scale);
-          canvas.height = Math.round(img.height * scale);
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          const compressed = canvas.toDataURL('image/jpeg', 0.4);
-          const sizeKB = Math.round(compressed.length * 0.75 / 1024);
-
-          // Save to localStorage
-          transferReceipts[key] = compressed;
-          localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
-
-          showToast('Receipt saved (' + sizeKB + 'KB). Download PDF now.', 'success');
-          renderTable();
-          updateStats();
-        } catch(canvasErr) {
-          // Canvas failed - save original dataUrl directly
-          transferReceipts[key] = dataUrl;
-          localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
-          showToast('Receipt saved. Download PDF now.', 'success');
-          renderTable();
-          updateStats();
-        }
-      };
-      img.onerror = function() {
-        // Not an image - save as-is
-        transferReceipts[key] = dataUrl;
-        localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
-        showToast('Receipt saved. Download PDF now.', 'success');
-        renderTable();
-        updateStats();
-      };
-      img.src = dataUrl;
-    } catch(err) {
-      showToast('Error saving receipt: ' + err.message, 'error');
-    }
-  };
-  reader.onerror = function() {
-    showToast('Could not read file. Try again.', 'error');
-  };
-  reader.readAsDataURL(file);
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  const colors = { success:'#16a34a', error:'#dc2626', warn:'#d97706', info:'#0d7d8a' };
+  t.style.background = colors[type] || '#1e293b';
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
 }
+</script>
+</body>
+</html>
