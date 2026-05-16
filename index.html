@@ -219,7 +219,7 @@ let hasSigned = false;
 // HARDCODED CONFIG - update these when needed
 // =============================================
 const DEFAULT_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Zzpn--zk4SAApAp_Cwo3ogDmRnNa3Ku7i77wQbp1D-4/export?format=csv&gid=0';
-const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwl2sIXAxkroNzRfQ9gTOi2AHg-lCNoHm6JG09zr0YjLpBhGUqKIh1uTrtC_CN5nN2D/exec';
+const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxI2vQ5-g5aNBAFBd__QJtp6GHjoyNhnddTWRYHfsJFUlB8ufp8E1Tlvcv60yLYVJ_U/exec';
 
 window.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
@@ -254,26 +254,40 @@ async function autoLoadCSV(url) {
 async function syncSubmissionsFromSheet() {
   const webhook = localStorage.getItem('icube_webhook_url') || DEFAULT_WEBHOOK_URL;
   if (!webhook) return;
-  try {
-    const res = await fetch(webhook, { method: 'GET', mode: 'cors' });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!Array.isArray(data)) return;
-    data.forEach(sub => {
-      if (!sub.name) return;
-      const key = sub.name.toLowerCase().trim();
-      // Only update if not already in local submissions or if sheet has newer data
-      if (!submissions[key]) {
-        submissions[key] = {
-          name: sub.name,
-          signature: sub.signature || '',
-          timestamp: sub.timestamp || '',
-          recipient: recipients.find(r => r.Name.toLowerCase().trim() === key) || { Name: sub.name }
-        };
+  return new Promise((resolve) => {
+    // Use script tag trick to bypass CORS for GET requests to Google Apps Script
+    const callbackName = 'gsCallback_' + Date.now();
+    const scriptEl = document.createElement('script');
+    const cleanUrl = webhook.replace('/exec', '/exec?callback=' + callbackName);
+    let done = false;
+
+    window[callbackName] = function(data) {
+      done = true;
+      delete window[callbackName];
+      document.body.removeChild(scriptEl);
+      if (Array.isArray(data)) {
+        data.forEach(sub => {
+          if (!sub.name) return;
+          const key = sub.name.toLowerCase().trim();
+          if (!submissions[key]) {
+            submissions[key] = {
+              name: sub.name,
+              signature: sub.signature || '',
+              timestamp: sub.timestamp || '',
+              recipient: recipients.find(r => r.Name.toLowerCase().trim() === key) || { Name: sub.name }
+            };
+          }
+        });
+        localStorage.setItem('icube_submissions', JSON.stringify(submissions));
       }
-    });
-    localStorage.setItem('icube_submissions', JSON.stringify(submissions));
-  } catch (e) { /* silently continue */ }
+      resolve();
+    };
+
+    scriptEl.onerror = () => { done = true; resolve(); };
+    setTimeout(() => { if (!done) resolve(); }, 5000);
+    scriptEl.src = cleanUrl;
+    document.body.appendChild(scriptEl);
+  });
 }
 
 function loadFromStorage() {
