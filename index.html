@@ -333,7 +333,7 @@ function startDraw(e) {
 function draw(e) {
   if (!isDrawing) return;
   const pos = getPos(e);
-  ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.strokeStyle = '#003087'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.lineTo(pos.x, pos.y); ctx.stroke();
   lastX = pos.x; lastY = pos.y;
   hasSigned = true;
