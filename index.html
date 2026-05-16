@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Token Received Form — iCube Innovation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --sic-primary: #0d7d8a;
+      --sic-light: #e0f5f7;
+      --bdih-primary: #1a3a2a;
+      --bdih-light: #e4ede8;
+      --accent: #f59e0b;
+      --surface: #f8f9fb;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    h1, h2, h3, .serif { font-family: 'DM Serif Display', serif; }
+
+    /* Tab styles */
+    .tab-btn { transition: all 0.2s; }
+    .tab-btn.active { border-bottom: 3px solid var(--accent); color: #1e293b; font-weight: 600; }
+    .tab-btn:not(.active) { color: var(--muted); border-bottom: 3px solid transparent; }
+
+    /* Canvas */
+    #signatureCanvas {
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      cursor: crosshair;
+      touch-action: none;
+      background: #fff;
+      display: block;
+      width: 100%;
+    }
+    #signatureCanvas.signed { border-color: #22c55e; border-style: solid; }
+
+    /* Card */
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    /* Status badge */
+    .badge-pending { background:#fef3c7; color:#92400e; }
+    .badge-submitted { background:#d1fae5; color:#065f46; }
+
+    /* PDF template hidden */
+    #pdfTemplate { position:absolute; left:-9999px; top:0; width:210mm; }
+
+    /* Spinner */
+    .spinner { border: 3px solid #e2e8f0; border-top-color: var(--sic-primary); border-radius: 50%; width: 28px; height: 28px; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Responsive table */
+    .admin-table th { background: #f1f5f9; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding: 10px 14px; }
+    .admin-table td { padding: 10px 14px; font-size: 0.875rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: #f8fafc; }
+
+    /* Fade in */
+    .fade-in { animation: fadeIn 0.4s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      padding: 12px 20px; border-radius: 10px; font-size: 0.875rem;
+      font-weight: 500; color: #fff; background: #1e293b;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transition: opacity 0.3s; opacity: 0; pointer-events: none;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- PDF Template (hidden, used for generation) -->
+<div id="pdfTemplate"></div>
+
+<!-- Main App -->
+<div class="min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between" style="box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+    <div class="flex items-center gap-3">
+      <!-- Sarawak Digital Logo placeholder (SVG inline) -->
+      <svg width="120" height="36" viewBox="0 0 120 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="6" fill="#0d7d8a"/>
+        <text x="18" y="24" text-anchor="middle" fill="white" font-family="DM Serif Display,serif" font-size="14" font-weight="bold">SD</text>
+        <text x="46" y="14" fill="#1e293b" font-family="DM Sans,sans-serif" font-size="9" font-weight="600">SARAWAK</text>
+        <text x="46" y="26" fill="#0d7d8a" font-family="DM Sans,sans-serif" font-size="9" font-weight="400">DIGITAL</text>
+      </svg>
+    </div>
+    <!-- Hub logo (right) -->
+    <div id="hubLogoArea"></div>
+  </header>
+
+  <!-- Tab Bar -->
+  <div class="bg-white border-b border-slate-200 px-6 flex gap-6">
+    <button class="tab-btn active py-3 text-sm" onclick="switchTab('recipient')" id="tabRecipient">Sign Form</button>
+    <button class="tab-btn py-3 text-sm" onclick="switchTab('admin')" id="tabAdmin">Admin Panel</button>
+  </div>
+
+  <!-- RECIPIENT TAB -->
+  <div id="viewRecipient" class="flex-1 flex flex-col items-center justify-center p-4 py-10 fade-in">
+    <!-- Step 1: Lookup -->
+    <div id="stepLookup" class="card w-full max-w-md p-8">
+      <div class="text-center mb-6">
+        <span class="text-3xl">📋</span>
+        <h2 class="text-xl mt-2">Token Acknowledgement Form</h2>
+        <p class="text-sm text-slate-500 mt-1">Please enter your full name exactly as registered to begin.</p>
+      </div>
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Full Name</label>
+      <input id="lookupName" type="text" placeholder="e.g. Siti Nurdiana binti Osman"
+        class="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-400 transition"
+        onkeydown="if(event.key==='Enter') lookupRecipient()" />
+      <p id="lookupError" class="text-red-500 text-xs mt-2 hidden"></p>
+      <button onclick="lookupRecipient()"
+        class="mt-4 w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg text-sm transition">
+        Verify Identity
+      </button>
+      <p class="text-xs text-slate-400 text-center mt-4">Your information is only shown to you.</p>
+    </div>
+
+    <!-- Step 2: Confirm Details + Sign -->
+    <div id="stepSign" class="card w-full max-w-lg p-8 hidden fade-in">
+      <div class="flex items-center gap-2 mb-4">
+        <button onclick="resetLookup()" class="text-slate-400 hover:text-slate-600 text-xs flex items-center gap-1">← Back</button>
+        <span class="text-xs text-slate-300">|</span>
+        <span class="text-xs text-slate-400">Acknowledgement Form</span>
+      </div>
+
+      <div id="recipientDetails" class="bg-slate-50 rounded-xl p-4 mb-5 border border-slate-100"></div>
+
+      <!-- Already submitted -->
+      <div id="alreadySubmitted" class="hidden text-center py-4">
+        <div class="text-3xl mb-2">✅</div>
+        <p class="font-semibold text-green-700">You have already acknowledged this form.</p>
+        <p class="text-sm text-slate-500 mt-1">Thank you! No further action is required.</p>
+      </div>
+
+      <!-- Signature area -->
+      <div id="signArea">
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Draw Your Signature Below</label>
+        <canvas id="signatureCanvas" height="160"></canvas>
+        <div class="flex justify-between items-center mt-2">
+          <button onclick="clearSignature()" class="text-xs text-slate-400 hover:text-red-400 transition">Clear Signature</button>
+          <span class="text-xs text-slate-400" id="signHint">Use mouse or finger to sign</span>
+        </div>
+        <button onclick="submitForm()"
+          class="mt-5 w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg text-sm transition">
+          Submit Acknowledgement
+        </button>
+        <p class="text-xs text-slate-400 text-center mt-3">By submitting, you confirm receipt of the token stated above.</p>
+      </div>
+    </div>
+
+    <!-- Step 3: Thank you -->
+    <div id="stepThankYou" class="card w-full max-w-md p-10 text-center hidden fade-in">
+      <div class="text-5xl mb-4">🙏</div>
+      <h2 class="text-xl mb-2">Thank You!</h2>
+      <p class="text-sm text-slate-500">Your acknowledgement has been recorded. You may now close this page.</p>
+    </div>
+  </div>
+
+  <!-- ADMIN TAB -->
+  <div id="viewAdmin" class="hidden flex-1 p-4 py-8 max-w-5xl mx-auto w-full fade-in">
+
+    <!-- PIN Gate -->
+    <div id="adminPinGate" class="card max-w-sm mx-auto p-8">
+      <h2 class="text-lg mb-1">Admin Access</h2>
+      <p class="text-sm text-slate-500 mb-5">Enter your PIN to continue.</p>
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PIN</label>
+      <input id="adminPinInput" type="password" maxlength="8" placeholder="••••"
+        class="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400 tracking-widest"
+        onkeydown="if(event.key==='Enter') checkPin()" />
+      <p id="pinError" class="text-red-500 text-xs mt-2 hidden">Incorrect PIN.</p>
+      <button onclick="checkPin()" class="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg text-sm transition">
+        Unlock Panel
+      </button>
+    </div>
+
+    <!-- Admin Dashboard (shown after PIN) -->
+    <div id="adminDashboard" class="hidden">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-xl">Admin Dashboard</h2>
+          <p class="text-sm text-slate-500">Manage recipients and download signed forms.</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="downloadAllPDFs()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+            ⬇ Download All Signed PDFs
+          </button>
+          <button onclick="adminLogout()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm px-4 py-2 rounded-lg transition">
+            Lock
+          </button>
+        </div>
+      </div>
+
+      <!-- Config Section -->
+      <div class="card p-5 mb-6">
+        <h3 class="font-semibold text-sm mb-3 flex items-center gap-2">⚙️ Configuration</h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Google Sheet CSV URL (Recipients)</label>
+            <input id="csvUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-teal-400" />
+            <button onclick="loadCSV()" class="mt-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+              Load / Refresh Data
+            </button>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Submission Endpoint (Google Apps Script or Form URL)</label>
+            <input id="webhookUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-teal-400" />
+            <button onclick="saveConfig()" class="mt-2 bg-slate-600 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+              Save Config
+            </button>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-100">
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Change Admin PIN</label>
+          <div class="flex gap-2">
+            <input id="newPinInput" type="password" maxlength="8" placeholder="New PIN" class="border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 w-32 tracking-widest" />
+            <button onclick="changePin()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">Update PIN</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="card p-4 text-center">
+          <div class="text-2xl font-bold text-teal-600" id="statTotal">0</div>
+          <div class="text-xs text-slate-500 mt-1">Total Recipients</div>
+        </div>
+        <div class="card p-4 text-center">
+          <div class="text-2xl font-bold text-green-600" id="statSubmitted">0</div>
+          <div class="text-xs text-slate-500 mt-1">Signed</div>
+        </div>
+        <div class="card p-4 text-center">
+          <div class="text-2xl font-bold text-amber-500" id="statPending">0</div>
+          <div class="text-xs text-slate-500 mt-1">Pending</div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+          <span class="font-semibold text-sm">Recipients</span>
+          <input id="tableSearch" onkeyup="renderTable()" type="text" placeholder="Search…" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-teal-400 w-48" />
+        </div>
+        <div class="overflow-x-auto">
+          <table class="admin-table w-full" id="recipientTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Hub</th>
+                <th>Program</th>
+                <th>Date</th>
+                <th>Role</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Signed</th>
+                <th>PDF</th>
+              </tr>
+            </thead>
+            <tbody id="recipientTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =============================================
+// STATE
+// =============================================
+let recipients = [];
+let submissions = {};
+let currentRecipient = null;
+let isDrawing = false;
+let ctx = null;
+let lastX = 0, lastY = 0;
+let hasSigned = false;
+
+// =============================================
+// INIT
+// =============================================
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  initCanvas();
+
+  // Pre-fill saved config
+  const savedCSV = localStorage.getItem('icube_csv_url');
+  const savedWebhook = localStorage.getItem('icube_webhook_url');
+  if (savedCSV) document.getElementById('csvUrl').value = savedCSV;
+  if (savedWebhook) document.getElementById('webhookUrl').value = savedWebhook;
+
+  // If PIN not set, default to '1234'
+  if (!localStorage.getItem('icube_pin')) {
+    localStorage.setItem('icube_pin', '1234');
+  }
+});
+
+function loadFromStorage() {
+  const saved = localStorage.getItem('icube_recipients');
+  if (saved) recipients = JSON.parse(saved);
+  const savedSubs = localStorage.getItem('icube_submissions');
+  if (savedSubs) submissions = JSON.parse(savedSubs);
+}
+
+// =============================================
+// TAB SWITCHING
+// =============================================
+function switchTab(tab) {
+  document.getElementById('viewRecipient').classList.toggle('hidden', tab !== 'recipient');
+  document.getElementById('viewAdmin').classList.toggle('hidden', tab !== 'admin');
+  document.getElementById('tabRecipient').classList.toggle('active', tab === 'recipient');
+  document.getElementById('tabAdmin').classList.toggle('active', tab === 'admin');
+  if (tab === 'recipient') resetLookup();
+}
+
+// =============================================
+// RECIPIENT FLOW
+// =============================================
+function lookupRecipient() {
+  const name = document.getElementById('lookupName').value.trim();
+  const errEl = document.getElementById('lookupError');
+  errEl.classList.add('hidden');
+
+  if (!name) {
+    errEl.textContent = 'Please enter your full name.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  if (recipients.length === 0) {
+    errEl.textContent = 'The recipient list has not been loaded yet. Please contact the organiser.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const match = recipients.find(r => r.Name.toLowerCase().trim() === name.toLowerCase());
+  if (!match) {
+    errEl.textContent = 'Name not found in the list. Please check your spelling and try again.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  currentRecipient = match;
+  showSignStep(match);
+}
+
+function showSignStep(r) {
+  document.getElementById('stepLookup').classList.add('hidden');
+  document.getElementById('stepSign').classList.remove('hidden');
+
+  const hub = (r.Hub || '').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
+  updateHubBranding(hub);
+
+  const detailsEl = document.getElementById('recipientDetails');
+  detailsEl.innerHTML = `
+    <div class="grid grid-cols-2 gap-3 text-sm">
+      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Name</div><div class="font-medium">${r.Name}</div></div>
+      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Hub</div><div class="font-medium">${r.Hub}</div></div>
+      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Program</div><div class="font-medium">${r['Program Name'] || r.Program || '-'}</div></div>
+      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Date</div><div class="font-medium">${r['Program Date'] || r.Date || '-'}</div></div>
+      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Role</div><div class="font-medium">${r.Role || '-'}</div></div>
+      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Token Amount</div><div class="font-semibold text-teal-700 text-base">${r.Amount || '-'}</div></div>
+    </div>
+  `;
+
+  const key = r.Name.toLowerCase().trim();
+  if (submissions[key]) {
+    document.getElementById('alreadySubmitted').classList.remove('hidden');
+    document.getElementById('signArea').classList.add('hidden');
+  } else {
+    document.getElementById('alreadySubmitted').classList.add('hidden');
+    document.getElementById('signArea').classList.remove('hidden');
+    clearSignature();
+  }
+}
+
+function resetLookup() {
+  currentRecipient = null;
+  document.getElementById('lookupName').value = '';
+  document.getElementById('lookupError').classList.add('hidden');
+  document.getElementById('stepLookup').classList.remove('hidden');
+  document.getElementById('stepSign').classList.add('hidden');
+  document.getElementById('stepThankYou').classList.add('hidden');
+  clearSignature();
+}
+
+// =============================================
+// CANVAS / SIGNATURE
+// =============================================
+function initCanvas() {
+  const canvas = document.getElementById('signatureCanvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Mouse
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+
+  // Touch
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, { passive: false });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); }, { passive: false });
+  canvas.addEventListener('touchend', endDraw);
+}
+
+function resizeCanvas() {
+  const canvas = document.getElementById('signatureCanvas');
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  canvas.width = canvas.offsetWidth;
+  ctx.putImageData(data, 0, 0);
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+}
+
+function getPos(e) {
+  const canvas = document.getElementById('signatureCanvas');
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX || e.pageX) - rect.left,
+    y: (e.clientY || e.pageY) - rect.top
+  };
+}
+
+function startDraw(e) {
+  isDrawing = true;
+  const pos = getPos(e);
+  lastX = pos.x; lastY = pos.y;
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+}
+
+function draw(e) {
+  if (!isDrawing) return;
+  const pos = getPos(e);
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+  lastX = pos.x; lastY = pos.y;
+  hasSigned = true;
+  document.getElementById('signatureCanvas').classList.add('signed');
+  document.getElementById('signHint').textContent = 'Signature captured';
+}
+
+function endDraw() { isDrawing = false; }
+
+function clearSignature() {
+  if (!ctx) return;
+  const canvas = document.getElementById('signatureCanvas');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  hasSigned = false;
+  canvas.classList.remove('signed');
+  document.getElementById('signHint').textContent = 'Use mouse or finger to sign';
+}
+
+function getSignatureData() {
+  return document.getElementById('signatureCanvas').toDataURL('image/png');
+}
+
+// =============================================
+// SUBMIT
+// =============================================
+async function submitForm() {
+  if (!hasSigned) {
+    showToast('Please draw your signature before submitting.', 'warn');
+    return;
+  }
+  const key = currentRecipient.Name.toLowerCase().trim();
+  const sigData = getSignatureData();
+  const timestamp = new Date().toISOString();
+
+  // Save to local state
+  submissions[key] = {
+    name: currentRecipient.Name,
+    signature: sigData,
+    timestamp: timestamp,
+    recipient: currentRecipient
+  };
+  localStorage.setItem('icube_submissions', JSON.stringify(submissions));
+
+  // Post to webhook if configured
+  const webhook = localStorage.getItem('icube_webhook_url');
+  if (webhook) {
+    try {
+      await fetch(webhook, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: currentRecipient.Name, timestamp, signature: sigData })
+      });
+    } catch (e) { /* silently continue */ }
+  }
+
+  // Show thank you
+  document.getElementById('stepSign').classList.add('hidden');
+  document.getElementById('stepThankYou').classList.remove('hidden');
+}
+
+// =============================================
+// ADMIN: PIN
+// =============================================
+function checkPin() {
+  const input = document.getElementById('adminPinInput').value;
+  const storedPin = localStorage.getItem('icube_pin') || '1234';
+  if (input === storedPin) {
+    document.getElementById('adminPinGate').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.remove('hidden');
+    renderTable();
+    updateStats();
+  } else {
+    document.getElementById('pinError').classList.remove('hidden');
+  }
+}
+
+function adminLogout() {
+  document.getElementById('adminPinGate').classList.remove('hidden');
+  document.getElementById('adminDashboard').classList.add('hidden');
+  document.getElementById('adminPinInput').value = '';
+  document.getElementById('pinError').classList.add('hidden');
+}
+
+function changePin() {
+  const newPin = document.getElementById('newPinInput').value.trim();
+  if (newPin.length < 4) { showToast('PIN must be at least 4 digits.', 'warn'); return; }
+  localStorage.setItem('icube_pin', newPin);
+  document.getElementById('newPinInput').value = '';
+  showToast('PIN updated successfully.', 'success');
+}
+
+// =============================================
+// ADMIN: CONFIG & CSV
+// =============================================
+function saveConfig() {
+  const csvUrl = document.getElementById('csvUrl').value.trim();
+  const webhookUrl = document.getElementById('webhookUrl').value.trim();
+  if (csvUrl) localStorage.setItem('icube_csv_url', csvUrl);
+  if (webhookUrl) localStorage.setItem('icube_webhook_url', webhookUrl);
+  showToast('Configuration saved.', 'success');
+}
+
+async function loadCSV() {
+  const url = document.getElementById('csvUrl').value.trim();
+  if (!url) { showToast('Please enter a CSV URL first.', 'warn'); return; }
+  localStorage.setItem('icube_csv_url', url);
+
+  showToast('Loading data…', 'info');
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Fetch failed');
+    const text = await res.text();
+    recipients = parseCSV(text);
+    localStorage.setItem('icube_recipients', JSON.stringify(recipients));
+    renderTable();
+    updateStats();
+    showToast(`Loaded ${recipients.length} recipients.`, 'success');
+  } catch (e) {
+    showToast('Failed to load CSV. Check the URL and sharing settings.', 'error');
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  return lines.slice(1).map(line => {
+    // Handle quoted fields
+    const vals = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQ = !inQ; }
+      else if (line[i] === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else { cur += line[i]; }
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  }).filter(r => r.Name && r.Name.trim());
+}
+
+// =============================================
+// ADMIN: TABLE
+// =============================================
+function renderTable() {
+  const query = (document.getElementById('tableSearch')?.value || '').toLowerCase();
+  const tbody = document.getElementById('recipientTableBody');
+  tbody.innerHTML = '';
+
+  const filtered = recipients.filter(r =>
+    !query ||
+    r.Name.toLowerCase().includes(query) ||
+    (r.Hub || '').toLowerCase().includes(query) ||
+    (r['Program Name'] || r.Program || '').toLowerCase().includes(query) ||
+    (r.Role || '').toLowerCase().includes(query)
+  );
+
+  filtered.forEach(r => {
+    const key = r.Name.toLowerCase().trim();
+    const sub = submissions[key];
+    const hub = (r.Hub || '').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
+    const hubColor = hub === 'SIC' ? 'text-teal-700 bg-teal-50' : 'text-green-900 bg-green-50';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="font-medium">${r.Name}</td>
+      <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${hubColor}">${hub}</span></td>
+      <td class="text-slate-600">${r['Program Name'] || r.Program || '-'}</td>
+      <td class="text-slate-600">${r['Program Date'] || r.Date || '-'}</td>
+      <td class="text-slate-600">${r.Role || '-'}</td>
+      <td class="font-semibold">${r.Amount || '-'}</td>
+      <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${sub ? 'badge-submitted' : 'badge-pending'}">${sub ? 'Submitted' : 'Pending'}</span></td>
+      <td>${sub ? `<img src="${sub.signature}" title="Signature" style="height:32px;width:80px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff" />` : '<span class="text-slate-300 text-xs">—</span>'}</td>
+      <td>${sub ? `<button onclick='downloadSinglePDF(${JSON.stringify(key)})' class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">PDF</button>` : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-400 py-8 text-sm">No recipients found.</td></tr>`;
+  }
+}
+
+function updateStats() {
+  const total = recipients.length;
+  const submitted = Object.keys(submissions).filter(k => recipients.some(r => r.Name.toLowerCase().trim() === k)).length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statSubmitted').textContent = submitted;
+  document.getElementById('statPending').textContent = total - submitted;
+}
+
+// =============================================
+// PDF GENERATION
+// =============================================
+function buildPDFHTML(sub) {
+  const r = sub.recipient;
+  const hub = (r.Hub || '').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
+  const hubColor = hub === 'SIC' ? '#0d7d8a' : '#1a3a2a';
+  const hubName = hub === 'SIC' ? 'Sarikei Innovation Center (SIC)' : 'Betong Digital Innovation Hub (BDIH)';
+  const address = hub === 'SIC'
+    ? 'Sarikei Innovation Center, Lot 1234, Jalan Sarikei, 96100 Sarikei, Sarawak. Tel: 084-XXXXXX'
+    : 'Betong Digital Innovation Hub, Lot 5678, Jalan Betong, 95700 Betong, Sarawak. Tel: 083-XXXXXX';
+  const formattedDate = sub.timestamp ? new Date(sub.timestamp).toLocaleString('en-MY', { dateStyle: 'long', timeStyle: 'short' }) : '-';
+
+  return `
+  <div style="font-family:'DM Sans',Arial,sans-serif;width:210mm;min-height:297mm;padding:18mm 16mm 14mm 16mm;box-sizing:border-box;background:#fff;color:#1e293b;">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid ${hubColor};padding-bottom:12px;margin-bottom:18px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div style="width:34px;height:34px;background:${hubColor};border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:13px;">SD</div>
+          <div>
+            <div style="font-size:9px;font-weight:600;letter-spacing:0.08em;color:#666;">SARAWAK DIGITAL</div>
+            <div style="font-size:9px;color:#aaa;">Ministry of Digital Economy</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="background:${hubColor};color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;">${hub}</div>
+        <div style="font-size:9px;color:#888;margin-top:3px;">${hubName}</div>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:20px;font-family:'DM Serif Display',serif;font-weight:400;letter-spacing:-0.02em;color:${hubColor};">TOKEN ACKNOWLEDGEMENT FORM</div>
+      <div style="font-size:10px;color:#888;margin-top:2px;letter-spacing:0.06em;">BORANG PENGESAHAN PENERIMAAN TOKEN</div>
+    </div>
+
+    <!-- Details Table -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:28px;font-size:11px;">
+      <tr>
+        <td style="width:38%;padding:8px 10px;background:#f8f9fb;font-weight:600;color:#64748b;border:1px solid #e2e8f0;">Nama / Name</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:600;">${r.Name}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 10px;background:#f8f9fb;font-weight:600;color:#64748b;border:1px solid #e2e8f0;">Program</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;">${r['Program Name'] || r.Program || '-'}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 10px;background:#f8f9fb;font-weight:600;color:#64748b;border:1px solid #e2e8f0;">Tarikh Program / Date</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;">${r['Program Date'] || r.Date || '-'}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 10px;background:#f8f9fb;font-weight:600;color:#64748b;border:1px solid #e2e8f0;">Peranan / Role</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;">${r.Role || '-'}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 10px;background:#f8f9fb;font-weight:600;color:#64748b;border:1px solid #e2e8f0;">Jumlah Token / Amount</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:700;font-size:13px;color:${hubColor};">${r.Amount || '-'}</td>
+      </tr>
+    </table>
+
+    <!-- Declaration -->
+    <div style="background:#f8f9fb;border-left:3px solid ${hubColor};padding:12px 14px;margin-bottom:28px;font-size:10.5px;color:#334155;border-radius:0 6px 6px 0;">
+      Saya mengesahkan bahawa saya telah menerima token/saguhati di atas berkaitan dengan penyertaan saya dalam program tersebut.<br/>
+      <em style="color:#64748b;">I hereby confirm that I have received the above token/honorarium in connection with my participation in the aforementioned program.</em>
+    </div>
+
+    <!-- Signature Block -->
+    <div style="display:flex;gap:24px;margin-bottom:32px;">
+      <div style="flex:1;">
+        <div style="font-size:10px;font-weight:600;color:#64748b;margin-bottom:6px;">TANDATANGAN / SIGNATURE</div>
+        <div style="border:1px solid #e2e8f0;border-radius:6px;background:#fff;padding:4px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <img src="${sub.signature}" style="max-height:72px;max-width:100%;object-fit:contain;" />
+        </div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:10px;font-weight:600;color:#64748b;margin-bottom:6px;">TARIKH / DATE</div>
+        <div style="border:1px solid #e2e8f0;border-radius:6px;background:#f8f9fb;padding:10px;height:80px;display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-size:11px;font-weight:500;">${formattedDate}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Official Use -->
+    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:24px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;margin-bottom:10px;">KEGUNAAN PEJABAT / OFFICIAL USE ONLY</div>
+      <div style="display:flex;gap:16px;">
+        <div style="flex:1;border-bottom:1px solid #e2e8f0;padding-bottom:18px;font-size:10px;color:#64748b;">Disemak oleh / Verified by:</div>
+        <div style="flex:1;border-bottom:1px solid #e2e8f0;padding-bottom:18px;font-size:10px;color:#64748b;">Tarikh / Date:</div>
+        <div style="flex:1;border-bottom:1px solid #e2e8f0;padding-bottom:18px;font-size:10px;color:#64748b;">No. Rujukan / Ref No.:</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="border-top:1px solid #e2e8f0;padding-top:10px;text-align:center;font-size:8.5px;color:#94a3b8;">
+      ${address}<br/>
+      <span style="color:#cbd5e1;">This document was digitally signed via iCube Innovation Token Form System.</span>
+    </div>
+  </div>`;
+}
+
+function downloadSinglePDF(key) {
+  const sub = submissions[key];
+  if (!sub) { showToast('No submission found.', 'error'); return; }
+  const html = buildPDFHTML(sub);
+  const container = document.getElementById('pdfTemplate');
+  container.innerHTML = html;
+
+  const opt = {
+    margin: 0,
+    filename: `TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(container.firstElementChild).save()
+    .then(() => { container.innerHTML = ''; showToast('PDF downloaded.', 'success'); });
+}
+
+async function downloadAllPDFs() {
+  const signedKeys = Object.keys(submissions).filter(k => recipients.some(r => r.Name.toLowerCase().trim() === k));
+  if (signedKeys.length === 0) { showToast('No signed forms to download.', 'warn'); return; }
+  showToast(`Generating ${signedKeys.length} PDFs…`, 'info');
+  for (const key of signedKeys) {
+    await new Promise(resolve => {
+      const sub = submissions[key];
+      const html = buildPDFHTML(sub);
+      const container = document.getElementById('pdfTemplate');
+      container.innerHTML = html;
+      const opt = {
+        margin: 0,
+        filename: `TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(container.firstElementChild).save().then(() => {
+        container.innerHTML = '';
+        setTimeout(resolve, 800);
+      });
+    });
+  }
+  showToast('All PDFs downloaded.', 'success');
+}
+
+// =============================================
+// HUB BRANDING
+// =============================================
+function updateHubBranding(hub) {
+  const area = document.getElementById('hubLogoArea');
+  if (hub === 'SIC') {
+    area.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:32px;height:32px;background:#0d7d8a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;">SIC</div>
+        <div style="text-align:right;"><div style="font-size:10px;font-weight:700;color:#0d7d8a;">SARIKEI</div><div style="font-size:9px;color:#888;">Innovation Center</div></div>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:32px;height:32px;background:#1a3a2a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;">BDIH</div>
+        <div style="text-align:right;"><div style="font-size:10px;font-weight:700;color:#1a3a2a;">BETONG</div><div style="font-size:9px;color:#888;">Digital Innovation Hub</div></div>
+      </div>`;
+  }
+}
+
+// =============================================
+// TOAST
+// =============================================
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  const colors = { success:'#16a34a', error:'#dc2626', warn:'#d97706', info:'#0d7d8a' };
+  t.style.background = colors[type] || '#1e293b';
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
