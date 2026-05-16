@@ -728,55 +728,60 @@ function buildPDFHTML(sub, key) {
 }
 async function uploadReceipt(key, input) {
   const file = input.files[0];
-  if (!file) return;
-  showToast('Processing receipt...', 'info');
+  if (!file) { showToast('No file selected.', 'warn'); return; }
 
-  // Compress image to small size
-  const compressImage = (file, maxWidth, quality) => new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const scale = Math.min(1, maxWidth / img.width);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
+  showToast('Reading file...', 'info');
 
-  try {
-    const compressed = await compressImage(file, 500, 0.4);
-    if (!compressed) { showToast('Could not read image.', 'error'); return; }
+  // Use FileReader - works on all mobile browsers
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const dataUrl = e.target.result;
 
-    const sizeKB = Math.round(compressed.length * 0.75 / 1024);
-    showToast(`Saving receipt (${sizeKB}KB)...`, 'info');
+      // Compress via canvas
+      const img = new Image();
+      img.onload = function() {
+        try {
+          const maxW = 500;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.4);
+          const sizeKB = Math.round(compressed.length * 0.75 / 1024);
 
-    // Save base64 directly to localStorage as receipt cache
-    transferReceipts[key] = compressed;
-    localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
+          // Save to localStorage
+          transferReceipts[key] = compressed;
+          localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
 
-    // Also send to Google Sheet via no-cors POST (stores base64 in column D)
-    const recipientName = submissions[key]?.name || key;
-    fetch(DEFAULT_WEBHOOK_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'saveReceipt',
-        name: recipientName,
-        receiptData: compressed
-      })
-    });
-
-    showToast('✓ Receipt saved!', 'success');
-    renderTable();
-    updateStats();
-
-  } catch(err) {
-    showToast('Error: ' + err.message, 'error');
-  }
+          showToast('Receipt saved (' + sizeKB + 'KB). Download PDF now.', 'success');
+          renderTable();
+          updateStats();
+        } catch(canvasErr) {
+          // Canvas failed - save original dataUrl directly
+          transferReceipts[key] = dataUrl;
+          localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
+          showToast('Receipt saved. Download PDF now.', 'success');
+          renderTable();
+          updateStats();
+        }
+      };
+      img.onerror = function() {
+        // Not an image - save as-is
+        transferReceipts[key] = dataUrl;
+        localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
+        showToast('Receipt saved. Download PDF now.', 'success');
+        renderTable();
+        updateStats();
+      };
+      img.src = dataUrl;
+    } catch(err) {
+      showToast('Error saving receipt: ' + err.message, 'error');
+    }
+  };
+  reader.onerror = function() {
+    showToast('Could not read file. Try again.', 'error');
+  };
+  reader.readAsDataURL(file);
 }
