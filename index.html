@@ -204,6 +204,7 @@ let isDrawing = false;
 let ctx = null;
 let lastX = 0, lastY = 0;
 let hasSigned = false;
+let transferReceipts = {}; // stores base64 transfer screenshots per recipient key
 
 // =============================================
 // HARDCODED CONFIG — update when program changes
@@ -232,6 +233,8 @@ function loadFromStorage() {
   if (saved) recipients = JSON.parse(saved);
   const savedSubs = localStorage.getItem('icube_submissions');
   if (savedSubs) submissions = JSON.parse(savedSubs);
+  const savedReceipts = localStorage.getItem('icube_transfer_receipts');
+  if (savedReceipts) transferReceipts = JSON.parse(savedReceipts);
 }
 
 async function autoLoadCSV(url) {
@@ -559,7 +562,17 @@ function renderTable() {
       <td class="font-semibold">${r.Amount || '-'}</td>
       <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${sub ? 'badge-submitted' : 'badge-pending'}">${sub ? 'Submitted' : 'Pending'}</span></td>
       <td>${sub ? `<img src="${sub.signature}" title="Signature" style="height:32px;width:80px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff" />` : '<span class="text-slate-300 text-xs">—</span>'}</td>
-      <td>${sub ? `<button onclick='downloadSinglePDF(${JSON.stringify(key)})' class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">PDF</button>` : ''}</td>
+      <td>
+        ${sub ? `
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+            <label class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-lg transition border border-blue-200">
+              ${transferReceipts[key] ? '✓ Receipt' : '+ Receipt'}
+              <input type="file" accept="image/*" style="display:none" onchange="uploadReceipt('${key}', this)" />
+            </label>
+            <button onclick='downloadSinglePDF(${JSON.stringify(key)})' class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">PDF</button>
+          </div>
+        ` : ''}
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -577,7 +590,7 @@ function updateStats() {
 // =============================================
 // PDF — matches official Token Received template
 // =============================================
-function buildPDFHTML(sub) {
+function buildPDFHTML(sub, key) {
   const r = sub.recipient;
   const hub = (r.Hub || '').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
   const logoSrc = hub === 'SIC'
@@ -619,7 +632,7 @@ function buildPDFHTML(sub) {
 
     <!-- Declaration -->
     <div style="font-size:11px;margin-bottom:14mm;line-height:2.2;">
-      I, <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>
+      I, <u>&nbsp;&nbsp;${r.Name}&nbsp;&nbsp;</u>
       acknowledge received a total of <strong><u>${r.Amount || '-'}</u></strong> on
       the <u>&nbsp;&nbsp;${programDate}&nbsp;&nbsp;</u>.
     </div>
@@ -650,6 +663,12 @@ function buildPDFHTML(sub) {
     </div>
 
     <!-- Footer -->
+    <!-- Transfer Receipt -->
+    <div style="margin-bottom:8mm;">
+      <div style="font-size:11px;font-weight:700;margin-bottom:6px;">Transfer Receipt:</div>
+      ${transferReceipts[key] ? '<img src="' + transferReceipts[key] + '" style="max-width:220px;max-height:160px;object-fit:contain;border:1px solid #e2e8f0;border-radius:6px;" />' : '<div style="width:220px;height:100px;border:1px dashed #cbd5e1;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#f8f9fb;"><span style="font-size:9px;color:#94a3b8;">No transfer receipt uploaded</span></div>'}
+    </div>
+
     <div style="position:absolute;bottom:10mm;left:18mm;right:18mm;border-top:1px solid #ccc;padding-top:5px;text-align:center;font-size:8.5px;color:#555;line-height:1.7;">
       ${footerHTML}
     </div>
@@ -657,11 +676,24 @@ function buildPDFHTML(sub) {
   </div>`;
 }
 
+function uploadReceipt(key, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    transferReceipts[key] = e.target.result;
+    localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
+    showToast('Transfer receipt uploaded.', 'success');
+    renderTable();
+  };
+  reader.readAsDataURL(file);
+}
+
 function downloadSinglePDF(key) {
   const sub = submissions[key];
   if (!sub) { showToast('No submission found.', 'error'); return; }
   const container = document.getElementById('pdfTemplate');
-  container.innerHTML = buildPDFHTML(sub);
+  container.innerHTML = buildPDFHTML(sub, key);
   const opt = {
     margin: 0,
     filename: `TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`,
@@ -681,7 +713,7 @@ async function downloadAllPDFs() {
     await new Promise(resolve => {
       const sub = submissions[key];
       const container = document.getElementById('pdfTemplate');
-      container.innerHTML = buildPDFHTML(sub);
+      container.innerHTML = buildPDFHTML(sub, key);
       const opt = {
         margin: 0,
         filename: `TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`,
