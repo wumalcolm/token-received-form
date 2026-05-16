@@ -274,6 +274,7 @@
                 <th>Hub</th>
                 <th>Program</th>
                 <th>Date</th>
+                <th>Duration</th>
                 <th>Role</th>
                 <th>Amount</th>
                 <th>Status</th>
@@ -637,6 +638,7 @@ function renderTable() {
       <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${hubColor}">${hub}</span></td>
       <td class="text-slate-600">${r['Program Name'] || r.Program || '-'}</td>
       <td class="text-slate-600">${r['Program Date'] || r.Date || '-'}</td>
+      <td class="text-slate-600">${r['Duration'] || '-'}</td>
       <td class="text-slate-600">${r.Role || '-'}</td>
       <td class="font-semibold">${r.Amount || '-'}</td>
       <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${sub ? 'badge-submitted' : 'badge-pending'}">${sub ? 'Submitted' : 'Pending'}</span></td>
