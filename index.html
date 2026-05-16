@@ -223,7 +223,22 @@ window.addEventListener('DOMContentLoaded', () => {
   if (savedCSV) document.getElementById('csvUrl').value = savedCSV;
   if (savedWebhook) document.getElementById('webhookUrl').value = savedWebhook;
   if (!localStorage.getItem('icube_pin')) localStorage.setItem('icube_pin', '1234');
+  // Auto-fetch CSV on every page load so any device works without admin setup
+  if (savedCSV) autoLoadCSV(savedCSV);
 });
+
+async function autoLoadCSV(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const text = await res.text();
+    const parsed = parseCSV(text);
+    if (parsed.length > 0) {
+      recipients = parsed;
+      localStorage.setItem('icube_recipients', JSON.stringify(recipients));
+    }
+  } catch (e) { /* silently continue - use cached data if available */ }
+}
 
 function loadFromStorage() {
   const saved = localStorage.getItem('icube_recipients');
