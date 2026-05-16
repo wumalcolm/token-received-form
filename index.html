@@ -9,90 +9,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --sic-primary: #0d7d8a;
-      --bdih-primary: #1a3a2a;
-      --accent: #f59e0b;
-      --surface: #f8f9fb;
-      --border: #e2e8f0;
-      --text: #1e293b;
-      --muted: #64748b;
-    }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html { -webkit-text-size-adjust: 100%; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text); min-height: 100vh; margin: 0; }
-    h1, h2, h3 { font-family: 'DM Serif Display', serif; }
-
-    /* Tabs */
-    .tab-btn { transition: all 0.2s; padding: 12px 8px; font-size: 0.875rem; white-space: nowrap; }
-    .tab-btn.active { border-bottom: 3px solid var(--accent); color: #1e293b; font-weight: 600; }
-    .tab-btn:not(.active) { color: var(--muted); border-bottom: 3px solid transparent; }
-
-    /* Canvas */
-    #signatureCanvas { border: 2px dashed #cbd5e1; border-radius: 8px; cursor: crosshair; touch-action: none; background: #fff; display: block; width: 100%; min-height: 140px; }
-    #signatureCanvas.signed { border-color: #22c55e; border-style: solid; }
-
-    /* Card */
-    .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-
-    /* Status badges */
+    :root { --sic-primary:#0d7d8a; --bdih-primary:#1a3a2a; --accent:#f59e0b; --surface:#f8f9fb; --border:#e2e8f0; --text:#1e293b; --muted:#64748b; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html { -webkit-text-size-adjust:100%; }
+    body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--text); min-height:100vh; margin:0; }
+    h1,h2,h3 { font-family:'DM Serif Display',serif; }
+    .tab-btn { transition:all 0.2s; padding:12px 8px; font-size:0.875rem; white-space:nowrap; }
+    .tab-btn.active { border-bottom:3px solid var(--accent); color:#1e293b; font-weight:600; }
+    .tab-btn:not(.active) { color:var(--muted); border-bottom:3px solid transparent; }
+    #signatureCanvas { border:2px dashed #cbd5e1; border-radius:8px; cursor:crosshair; touch-action:none; background:#fff; display:block; width:100%; min-height:130px; }
+    #signatureCanvas.signed { border-color:#22c55e; border-style:solid; }
+    .card { background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
     .badge-pending { background:#fef3c7; color:#92400e; }
     .badge-submitted { background:#d1fae5; color:#065f46; }
-
-    /* PDF template hidden off-screen */
     #pdfTemplate { position:fixed; left:-9999px; top:0; width:794px; background:#fff; z-index:-1; }
-
-    /* Admin table — scrollable on mobile */
-    .admin-table { min-width: 700px; }
-    .admin-table th { background: #f1f5f9; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding: 10px 12px; white-space: nowrap; }
-    .admin-table td { padding: 10px 12px; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-    .admin-table tr:last-child td { border-bottom: none; }
-    .admin-table tr:hover td { background: #f8fafc; }
-
-    /* Buttons — touch-friendly */
-    button { cursor: pointer; min-height: 40px; }
-    input, button { font-family: 'DM Sans', sans-serif; }
-
-    /* Recipient view — center vertically on tall screens, top-align on short/mobile */
-    #viewRecipient { padding: 16px; padding-top: 24px; padding-bottom: 40px; }
-    #stepLookup, #stepSign, #stepThankYou { width: 100%; max-width: 480px; margin: 0 auto; }
-
-    /* Mobile-specific overrides */
-    @media (max-width: 640px) {
-      .card { border-radius: 12px; }
-      #stepLookup, #stepSign { padding: 20px 16px; }
-      #stepThankYou { padding: 32px 16px; }
-      .tab-btn { font-size: 0.8rem; padding: 10px 6px; }
-      #adminDashboard h2 { font-size: 1.1rem; }
-      .grid-cols-3-mobile { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-      .stat-card { padding: 12px 8px; }
-      .stat-number { font-size: 1.4rem; }
-    }
-
-    /* Fade in */
-    .fade-in { animation: fadeIn 0.4s ease both; }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-
-    /* Toast */
-    #toast {
-      position: fixed; bottom: 20px; right: 16px; left: 16px; z-index: 9999;
-      padding: 12px 18px; border-radius: 10px; font-size: 0.875rem;
-      font-weight: 500; color: #fff; background: #1e293b;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      transition: opacity 0.3s; opacity: 0; pointer-events: none;
-      text-align: center;
-    }
-    @media (min-width: 640px) {
-      #toast { left: auto; width: auto; max-width: 320px; text-align: left; }
-    }
-    #toast.show { opacity: 1; }
-
-    /* Warning box */
-    .admin-warning { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.78rem; color: #92400e; line-height: 1.6; }
-
-    /* Config grid — stack on mobile */
-    .config-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-    @media (min-width: 768px) { .config-grid { grid-template-columns: 1fr 1fr; } }
+    .admin-table { min-width:700px; }
+    .admin-table th { background:#f1f5f9; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); padding:10px 12px; white-space:nowrap; }
+    .admin-table td { padding:10px 12px; font-size:0.82rem; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .admin-table tr:last-child td { border-bottom:none; }
+    .admin-table tr:hover td { background:#f8fafc; }
+    button { cursor:pointer; min-height:40px; }
+    input,button { font-family:'DM Sans',sans-serif; }
+    .fade-in { animation:fadeIn 0.4s ease both; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    #toast { position:fixed; bottom:20px; right:16px; left:16px; z-index:9999; padding:12px 18px; border-radius:10px; font-size:0.875rem; font-weight:500; color:#fff; background:#1e293b; box-shadow:0 8px 24px rgba(0,0,0,0.2); transition:opacity 0.3s; opacity:0; pointer-events:none; text-align:center; }
+    @media(min-width:640px){ #toast{left:auto;width:auto;max-width:360px;text-align:left;} }
+    #toast.show { opacity:1; }
+    @media(max-width:640px){ .card{border-radius:12px;} .tab-btn{font-size:0.8rem;padding:10px 6px;} }
   </style>
 </head>
 <body>
@@ -101,29 +44,27 @@
 <div class="min-h-screen flex flex-col">
 
   <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between" style="box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-    <div class="flex items-center gap-3">
-      <svg width="120" height="36" viewBox="0 0 120 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="36" height="36" rx="6" fill="#0d7d8a"/>
-        <text x="18" y="24" text-anchor="middle" fill="white" font-family="DM Serif Display,serif" font-size="14" font-weight="bold">SD</text>
-        <text x="46" y="14" fill="#1e293b" font-family="DM Sans,sans-serif" font-size="9" font-weight="600">SARAWAK</text>
-        <text x="46" y="26" fill="#0d7d8a" font-family="DM Sans,sans-serif" font-size="9" font-weight="400">DIGITAL</text>
-      </svg>
-    </div>
+    <svg width="120" height="36" viewBox="0 0 120 36" fill="none">
+      <rect width="36" height="36" rx="6" fill="#0d7d8a"/>
+      <text x="18" y="24" text-anchor="middle" fill="white" font-family="serif" font-size="14" font-weight="bold">SD</text>
+      <text x="46" y="14" fill="#1e293b" font-family="sans-serif" font-size="9" font-weight="600">SARAWAK</text>
+      <text x="46" y="26" fill="#0d7d8a" font-family="sans-serif" font-size="9">DIGITAL</text>
+    </svg>
     <div id="hubLogoArea"></div>
   </header>
 
   <div class="bg-white border-b border-slate-200 px-6 flex gap-6">
-    <button class="tab-btn active py-3 text-sm" onclick="switchTab('recipient')" id="tabRecipient">Sign Form</button>
-    <button class="tab-btn py-3 text-sm" onclick="switchTab('admin')" id="tabAdmin">Admin Panel</button>
+    <button class="tab-btn active" onclick="switchTab('recipient')" id="tabRecipient">Sign Form</button>
+    <button class="tab-btn" onclick="switchTab('admin')" id="tabAdmin">Admin Panel</button>
   </div>
 
   <!-- RECIPIENT TAB -->
   <div id="viewRecipient" class="flex-1 flex flex-col items-center p-3 pt-5 pb-10 fade-in">
-    <div id="stepLookup" class="card w-full max-w-md" style="padding: 20px 16px;">
-      <div class="text-center mb-6">
-        <span class="text-3xl">📋</span>
+    <div id="stepLookup" class="card w-full max-w-md" style="padding:20px 16px;">
+      <div class="text-center mb-5">
+        <span style="font-size:2rem;">📋</span>
         <h2 class="text-xl mt-2">Token Acknowledgement Form</h2>
-        <p class="text-sm text-slate-500 mt-1">Please enter your full name exactly as registered to begin.</p>
+        <p class="text-sm text-slate-500 mt-1">Enter your full name exactly as registered.</p>
       </div>
       <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Full Name</label>
       <input id="lookupName" type="text" placeholder="e.g. Siti Nurdiana binti Osman"
@@ -134,23 +75,23 @@
       <p class="text-xs text-slate-400 text-center mt-4">Your information is only shown to you.</p>
     </div>
 
-    <div id="stepSign" class="card w-full max-w-lg hidden fade-in" style="padding: 16px;">
+    <div id="stepSign" class="card w-full max-w-lg hidden fade-in" style="padding:16px;margin-top:12px;">
       <div class="flex items-center gap-2 mb-3">
-        <button onclick="resetLookup()" class="text-slate-400 hover:text-slate-600 text-xs flex items-center gap-1">← Back</button>
+        <button onclick="resetLookup()" class="text-slate-400 text-xs">← Back</button>
         <span class="text-xs text-slate-300">|</span>
         <span class="text-xs text-slate-400">Acknowledgement Form</span>
       </div>
       <div id="recipientDetails" class="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100"></div>
       <div id="alreadySubmitted" class="hidden text-center py-4">
-        <div class="text-3xl mb-2">✅</div>
-        <p class="font-semibold text-green-700">You have already acknowledged this form.</p>
+        <div style="font-size:2rem;">✅</div>
+        <p class="font-semibold text-green-700 mt-2">You have already acknowledged this form.</p>
         <p class="text-sm text-slate-500 mt-1">Thank you! No further action is required.</p>
       </div>
       <div id="signArea">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Draw Your Signature Below</label>
         <canvas id="signatureCanvas" height="130"></canvas>
         <div class="flex justify-between items-center mt-2">
-          <button onclick="clearSignature()" class="text-xs text-slate-400 hover:text-red-400 transition">Clear Signature</button>
+          <button onclick="clearSignature()" class="text-xs text-slate-400 hover:text-red-400">Clear Signature</button>
           <span class="text-xs text-slate-400" id="signHint">Use mouse or finger to sign</span>
         </div>
         <button onclick="submitForm()" class="mt-4 w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg text-sm transition">Submit Acknowledgement</button>
@@ -158,9 +99,9 @@
       </div>
     </div>
 
-    <div id="stepThankYou" class="card w-full max-w-md text-center hidden fade-in" style="padding: 32px 16px;">
-      <div class="text-5xl mb-4">🙏</div>
-      <h2 class="text-xl mb-2">Thank You!</h2>
+    <div id="stepThankYou" class="card w-full max-w-md text-center hidden fade-in" style="padding:32px 16px;margin-top:12px;">
+      <div style="font-size:3rem;">🙏</div>
+      <h2 class="text-xl mt-3 mb-2">Thank You!</h2>
       <p class="text-sm text-slate-500">Your acknowledgement has been recorded. You may now close this page.</p>
     </div>
   </div>
@@ -170,12 +111,11 @@
     <div id="adminPinGate" class="card max-w-sm mx-auto p-8">
       <h2 class="text-lg mb-1">Admin Access</h2>
       <p class="text-sm text-slate-500 mb-5">Enter your PIN to continue.</p>
-      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PIN</label>
       <input id="adminPinInput" type="password" maxlength="8" placeholder="••••"
         class="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400 tracking-widest"
         onkeydown="if(event.key==='Enter') checkPin()" />
       <p id="pinError" class="text-red-500 text-xs mt-2 hidden">Incorrect PIN.</p>
-      <button onclick="checkPin()" class="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg text-sm transition">Unlock Panel</button>
+      <button onclick="checkPin()" class="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg text-sm">Unlock Panel</button>
     </div>
 
     <div id="adminDashboard" class="hidden">
@@ -185,41 +125,24 @@
           <p style="font-size:0.75rem;color:#64748b;margin:2px 0 0 0;">Manage recipients and signed forms.</p>
         </div>
         <div class="flex gap-2">
-          <button onclick="downloadAllPDFs()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">⬇ All PDFs</button>
-          <button onclick="adminLogout()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-2 rounded-lg transition">Lock</button>
+          <button onclick="downloadAllPDFs()" class="bg-green-600 text-white text-xs font-semibold px-3 py-2 rounded-lg">⬇ All PDFs</button>
+          <button onclick="adminLogout()" class="bg-slate-100 text-slate-600 text-xs px-3 py-2 rounded-lg">Lock</button>
         </div>
       </div>
-      
 
-      
-
-            <!-- Hidden inputs for JS compatibility -->
-      <input id="csvUrl" type="hidden" />
-      <input id="webhookUrl" type="hidden" />
-
-      <!-- PIN + Refresh -->
       <div class="card p-3 mb-4">
         <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
-          <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;white-space:nowrap;">Change PIN</span>
+          <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;">Change PIN</span>
           <input id="newPinInput" type="password" maxlength="8" placeholder="New PIN" style="border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:0.8rem;outline:none;width:90px;letter-spacing:0.15em;" />
-          <button onclick="changePin()" style="background:#f59e0b;color:#fff;font-size:0.75rem;font-weight:600;padding:6px 12px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;">Update PIN</button>
-          <button onclick="loadCSV()" style="background:#f1f5f9;color:#475569;font-size:0.75rem;font-weight:600;padding:6px 12px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;">🔄 Refresh</button>
+          <button onclick="changePin()" style="background:#f59e0b;color:#fff;font-size:0.75rem;font-weight:600;padding:6px 12px;border-radius:8px;border:none;cursor:pointer;">Update PIN</button>
+          <button onclick="loadCSV()" style="background:#f1f5f9;color:#475569;font-size:0.75rem;font-weight:600;padding:6px 12px;border-radius:8px;border:none;cursor:pointer;">🔄 Refresh</button>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
-        <div class="card" style="padding:10px 8px;text-align:center;">
-          <div style="font-size:1.4rem;font-weight:700;color:#0d9488;" id="statTotal">0</div>
-          <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Total</div>
-        </div>
-        <div class="card" style="padding:10px 8px;text-align:center;">
-          <div style="font-size:1.4rem;font-weight:700;color:#16a34a;" id="statSubmitted">0</div>
-          <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Signed</div>
-        </div>
-        <div class="card" style="padding:10px 8px;text-align:center;">
-          <div style="font-size:1.4rem;font-weight:700;color:#f59e0b;" id="statPending">0</div>
-          <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Pending</div>
-        </div>
+        <div class="card" style="padding:10px 8px;text-align:center;"><div style="font-size:1.4rem;font-weight:700;color:#0d9488;" id="statTotal">0</div><div style="font-size:0.7rem;color:#64748b;">Total</div></div>
+        <div class="card" style="padding:10px 8px;text-align:center;"><div style="font-size:1.4rem;font-weight:700;color:#16a34a;" id="statSubmitted">0</div><div style="font-size:0.7rem;color:#64748b;">Signed</div></div>
+        <div class="card" style="padding:10px 8px;text-align:center;"><div style="font-size:1.4rem;font-weight:700;color:#f59e0b;" id="statPending">0</div><div style="font-size:0.7rem;color:#64748b;">Pending</div></div>
       </div>
 
       <div class="card overflow-hidden">
@@ -229,12 +152,7 @@
         </div>
         <div class="overflow-x-auto">
           <table class="admin-table w-full">
-            <thead>
-              <tr>
-                <th>Name</th><th>Hub</th><th>Program</th><th>Date</th><th>Duration</th>
-                <th>Role</th><th>Amount</th><th>Status</th><th>Signed</th><th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Name</th><th>Hub</th><th>Program</th><th>Date</th><th>Duration</th><th>Role</th><th>Amount</th><th>Status</th><th>Signed</th><th>Actions</th></tr></thead>
             <tbody id="recipientTableBody"></tbody>
           </table>
         </div>
@@ -244,109 +162,68 @@
 </div>
 
 <script>
-let recipients = [];
-let submissions = {};
-let currentRecipient = null;
-let isDrawing = false;
-let ctx = null;
-let lastX = 0, lastY = 0;
-let hasSigned = false;
-let transferReceipts = {}; // Drive links keyed by recipient name
+let recipients = [], submissions = {}, transferReceipts = {};
+let currentRecipient = null, isDrawing = false, ctx = null;
+let lastX = 0, lastY = 0, hasSigned = false;
 
-// =============================================
-// HARDCODED CONFIG — update when program changes
-// =============================================
 const DEFAULT_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Zzpn--zk4SAApAp_Cwo3ogDmRnNa3Ku7i77wQbp1D-4/export?format=csv&gid=0';
 const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzIRCKp64E5mrFvGmUTiR0m6lJaZMwQIX9Ht0jv7_gLO24VKqZodYHUbke58T88YyKe/exec';
 
-// =============================================
-// INIT
-// =============================================
 window.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
   initCanvas();
-  const savedCSV = localStorage.getItem('icube_csv_url') || DEFAULT_CSV_URL;
-  const savedWebhook = localStorage.getItem('icube_webhook_url') || DEFAULT_WEBHOOK_URL;
-  localStorage.setItem('icube_csv_url', savedCSV);
-  localStorage.setItem('icube_webhook_url', savedWebhook);
-  if(document.getElementById('csvUrl')) document.getElementById('csvUrl').value = savedCSV;
+  localStorage.setItem('icube_csv_url', DEFAULT_CSV_URL);
+  localStorage.setItem('icube_webhook_url', DEFAULT_WEBHOOK_URL);
   if (!localStorage.getItem('icube_pin')) localStorage.setItem('icube_pin', '1234');
-  autoLoadCSV(savedCSV);
+  autoLoadCSV(DEFAULT_CSV_URL);
 });
 
 function loadFromStorage() {
-  const saved = localStorage.getItem('icube_recipients');
-  if (saved) recipients = JSON.parse(saved);
-  const savedSubs = localStorage.getItem('icube_submissions');
-  if (savedSubs) submissions = JSON.parse(savedSubs);
-  const savedReceipts = localStorage.getItem('icube_transfer_receipts');
-  if (savedReceipts) transferReceipts = JSON.parse(savedReceipts);
+  const r = localStorage.getItem('icube_recipients'); if (r) recipients = JSON.parse(r);
+  const s = localStorage.getItem('icube_submissions'); if (s) submissions = JSON.parse(s);
+  const t = localStorage.getItem('icube_transfer_receipts'); if (t) transferReceipts = JSON.parse(t);
 }
 
 async function autoLoadCSV(url) {
   try {
     const res = await fetch(url);
     if (!res.ok) return;
-    const text = await res.text();
-    const parsed = parseCSV(text);
-    if (parsed.length > 0) {
-      recipients = parsed;
-      localStorage.setItem('icube_recipients', JSON.stringify(recipients));
-    }
-  } catch (e) {}
+    const parsed = parseCSV(await res.text());
+    if (parsed.length > 0) { recipients = parsed; localStorage.setItem('icube_recipients', JSON.stringify(recipients)); }
+  } catch(e) {}
   await syncSubmissionsFromSheet();
 }
 
-// =============================================
-// SYNC SUBMISSIONS FROM SHEET (JSONP)
-// =============================================
 async function syncSubmissionsFromSheet() {
-  const webhook = localStorage.getItem('icube_webhook_url') || DEFAULT_WEBHOOK_URL;
-  if (!webhook) return;
+  const webhook = DEFAULT_WEBHOOK_URL;
   return new Promise((resolve) => {
-    const callbackName = 'gsCallback_' + Date.now();
-    const scriptEl = document.createElement('script');
-    const url = webhook + '?callback=' + callbackName;
+    const cb = 'gsCallback_' + Date.now();
+    const el = document.createElement('script');
     let done = false;
-
-    window[callbackName] = function(data) {
-      done = true;
-      delete window[callbackName];
-      if (document.body.contains(scriptEl)) document.body.removeChild(scriptEl);
+    window[cb] = function(data) {
+      done = true; delete window[cb];
+      if (document.body.contains(el)) document.body.removeChild(el);
       if (Array.isArray(data)) {
-        const sheetKeys = new Set();
+        const keys = new Set();
         data.forEach(sub => {
           if (!sub.name) return;
           const key = sub.name.toLowerCase().trim();
-          sheetKeys.add(key);
-          submissions[key] = {
-            name: sub.name,
-            signature: sub.signature || '',
-            timestamp: sub.timestamp || '',
-            fromSheet: true,
-            recipient: recipients.find(r => r.Name.toLowerCase().trim() === key) || { Name: sub.name }
-          };
-          if (sub.receiptLink) transferReceipts[key] = sub.receiptLink;
+          keys.add(key);
+          submissions[key] = { name:sub.name, signature:sub.signature||'', timestamp:sub.timestamp||'', fromSheet:true, recipient:recipients.find(r=>r.Name.toLowerCase().trim()===key)||{Name:sub.name} };
+          if (sub.receiptLink && sub.receiptLink !== 'undefined' && sub.receiptLink !== '') transferReceipts[key] = sub.receiptLink;
         });
-        // Remove local entries not confirmed by sheet
-        Object.keys(submissions).forEach(k => {
-          if (!sheetKeys.has(k)) delete submissions[k];
-        });
+        Object.keys(submissions).forEach(k => { if (!keys.has(k)) delete submissions[k]; });
         localStorage.setItem('icube_submissions', JSON.stringify(submissions));
       }
       resolve();
     };
-
-    scriptEl.onerror = () => { done = true; resolve(); };
-    setTimeout(() => { if (!done) { resolve(); } }, 5000);
-    scriptEl.src = url;
-    document.body.appendChild(scriptEl);
+    el.onerror = () => { done = true; resolve(); };
+    setTimeout(() => { if (!done) resolve(); }, 5000);
+    el.src = webhook + '?callback=' + cb;
+    document.body.appendChild(el);
   });
 }
 
-// =============================================
-// TAB SWITCHING
-// =============================================
 function switchTab(tab) {
   document.getElementById('viewRecipient').classList.toggle('hidden', tab !== 'recipient');
   document.getElementById('viewAdmin').classList.toggle('hidden', tab !== 'admin');
@@ -355,17 +232,14 @@ function switchTab(tab) {
   if (tab === 'recipient') resetLookup();
 }
 
-// =============================================
-// RECIPIENT FLOW
-// =============================================
 function lookupRecipient() {
   const name = document.getElementById('lookupName').value.trim();
   const errEl = document.getElementById('lookupError');
   errEl.classList.add('hidden');
   if (!name) { errEl.textContent = 'Please enter your full name.'; errEl.classList.remove('hidden'); return; }
-  if (recipients.length === 0) { errEl.textContent = 'The recipient list has not been loaded yet. Please contact the organiser.'; errEl.classList.remove('hidden'); return; }
+  if (recipients.length === 0) { errEl.textContent = 'Recipient list not loaded. Please contact the organiser.'; errEl.classList.remove('hidden'); return; }
   const match = recipients.find(r => r.Name.toLowerCase().trim() === name.toLowerCase());
-  if (!match) { errEl.textContent = 'Name not found in the list. Please check your spelling and try again.'; errEl.classList.remove('hidden'); return; }
+  if (!match) { errEl.textContent = 'Name not found. Please check your spelling and try again.'; errEl.classList.remove('hidden'); return; }
   currentRecipient = match;
   showSignStep(match);
 }
@@ -373,20 +247,17 @@ function lookupRecipient() {
 function showSignStep(r) {
   document.getElementById('stepLookup').classList.add('hidden');
   document.getElementById('stepSign').classList.remove('hidden');
-  const hub = (r.Hub || '').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
+  const hub = (r.Hub||'').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
   updateHubBranding(hub);
-  const detailsEl = document.getElementById('recipientDetails');
-  detailsEl.innerHTML = `
+  document.getElementById('recipientDetails').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.85rem;">
-      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Name</div><div style="font-weight:500;">${r.Name}</div></div>
-      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Hub</div><div style="font-weight:500;font-size:0.8rem;">${r.Hub}</div></div>
-      <div style="grid-column:1/-1;"><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Program</div><div style="font-weight:500;">${r['Program Name'] || r.Program || '-'}</div></div>
-      <div style="grid-column:1/-1;"><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Date & Duration</div><div style="font-weight:500;">${r['Program Date'] || r.Date || '-'} &nbsp;·&nbsp; ${r['Duration'] || '-'}</div></div>
-      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Role</div><div style="font-weight:500;">${r.Role || '-'}</div></div>
-      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Token Amount</div><div style="font-weight:600;color:#0d7d8a;font-size:1rem;">${r.Amount || '-'}</div></div>
+      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">Name</div><div style="font-weight:500;">${r.Name}</div></div>
+      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">Hub</div><div style="font-weight:500;font-size:0.8rem;">${r.Hub}</div></div>
+      <div style="grid-column:1/-1;"><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">Program</div><div style="font-weight:500;">${r['Program Name']||r.Program||'-'}</div></div>
+      <div style="grid-column:1/-1;"><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">Date & Duration</div><div style="font-weight:500;">${r['Program Date']||r.Date||'-'} &nbsp;·&nbsp; ${r['Duration']||'-'}</div></div>
+      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">Role</div><div style="font-weight:500;">${r.Role||'-'}</div></div>
+      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">Token Amount</div><div style="font-weight:600;color:#0d7d8a;font-size:1rem;">${r.Amount||'-'}</div></div>
     </div>`;
-
-  // Always sync from sheet first — sheet is source of truth
   syncSubmissionsFromSheet().then(() => {
     const key = r.Name.toLowerCase().trim();
     if (submissions[key] && submissions[key].fromSheet) {
@@ -411,9 +282,6 @@ function resetLookup() {
   clearSignature();
 }
 
-// =============================================
-// CANVAS
-// =============================================
 function initCanvas() {
   const canvas = document.getElementById('signatureCanvas');
   ctx = canvas.getContext('2d');
@@ -423,92 +291,62 @@ function initCanvas() {
   canvas.addEventListener('mousemove', draw);
   canvas.addEventListener('mouseup', endDraw);
   canvas.addEventListener('mouseleave', endDraw);
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, { passive: false });
-  canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); }, { passive: false });
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, { passive:false });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); }, { passive:false });
   canvas.addEventListener('touchend', endDraw);
 }
 
 function resizeCanvas() {
   const canvas = document.getElementById('signatureCanvas');
   const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width;
-  canvas.height = rect.height || 160;
+  canvas.width = rect.width; canvas.height = rect.height || 130;
   ctx.strokeStyle = '#003087'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
 }
 
 function getPos(e) {
   const canvas = document.getElementById('signatureCanvas');
   const rect = canvas.getBoundingClientRect();
-  return {
-    x: ((e.clientX || e.pageX) - rect.left) * (canvas.width / rect.width),
-    y: ((e.clientY || e.pageY) - rect.top) * (canvas.height / rect.height)
-  };
+  return { x:((e.clientX||e.pageX)-rect.left)*(canvas.width/rect.width), y:((e.clientY||e.pageY)-rect.top)*(canvas.height/rect.height) };
 }
 
-function startDraw(e) {
-  isDrawing = true;
-  const pos = getPos(e);
-  lastX = pos.x; lastY = pos.y;
-  ctx.beginPath(); ctx.moveTo(lastX, lastY);
-}
-
+function startDraw(e) { isDrawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; ctx.beginPath(); ctx.moveTo(lastX,lastY); }
 function draw(e) {
   if (!isDrawing) return;
-  const pos = getPos(e);
-  ctx.strokeStyle = '#003087'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.lineTo(pos.x, pos.y); ctx.stroke();
-  lastX = pos.x; lastY = pos.y;
-  hasSigned = true;
+  const p = getPos(e);
+  ctx.strokeStyle='#003087'; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y;
+  hasSigned=true;
   document.getElementById('signatureCanvas').classList.add('signed');
-  document.getElementById('signHint').textContent = 'Signature captured';
+  document.getElementById('signHint').textContent='Signature captured';
 }
-
-function endDraw() { isDrawing = false; }
-
+function endDraw() { isDrawing=false; }
 function clearSignature() {
   if (!ctx) return;
-  const canvas = document.getElementById('signatureCanvas');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  hasSigned = false;
+  const canvas=document.getElementById('signatureCanvas');
+  ctx.clearRect(0,0,canvas.width,canvas.height); hasSigned=false;
   canvas.classList.remove('signed');
-  document.getElementById('signHint').textContent = 'Use mouse or finger to sign';
+  document.getElementById('signHint').textContent='Use mouse or finger to sign';
 }
-
 function getSignatureData() { return document.getElementById('signatureCanvas').toDataURL('image/png'); }
 
-// =============================================
-// SUBMIT
-// =============================================
-
 async function submitForm() {
-  if (!hasSigned) { showToast('Please draw your signature before submitting.', 'warn'); return; }
+  if (!hasSigned) { showToast('Please draw your signature before submitting.','warn'); return; }
   const key = currentRecipient.Name.toLowerCase().trim();
   const sigData = getSignatureData();
   const timestamp = new Date().toISOString();
-
-  const webhook = DEFAULT_WEBHOOK_URL;
-  if (webhook) {
-    try {
-      fetch(webhook, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ name: currentRecipient.Name, timestamp, signature: sigData })
-      });
-    } catch (e) {}
-  }
-
-  submissions[key] = { name: currentRecipient.Name, signature: sigData, timestamp, fromSheet: true, recipient: currentRecipient };
+  try {
+    fetch(DEFAULT_WEBHOOK_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body:JSON.stringify({name:currentRecipient.Name,timestamp,signature:sigData}) });
+  } catch(e) {}
+  submissions[key] = { name:currentRecipient.Name, signature:sigData, timestamp, fromSheet:true, recipient:currentRecipient };
   localStorage.setItem('icube_submissions', JSON.stringify(submissions));
-
   document.getElementById('stepSign').classList.add('hidden');
   document.getElementById('stepThankYou').classList.remove('hidden');
 }
 
 function checkPin() {
   const input = document.getElementById('adminPinInput').value;
-  const storedPin = localStorage.getItem('icube_pin') || '1234';
-  if (input === storedPin) {
+  const stored = localStorage.getItem('icube_pin') || '1234';
+  if (input === stored) {
     document.getElementById('adminPinGate').classList.add('hidden');
     document.getElementById('adminDashboard').classList.remove('hidden');
     syncSubmissionsFromSheet().then(() => { renderTable(); updateStats(); });
@@ -523,120 +361,213 @@ function adminLogout() {
 }
 
 function changePin() {
-  const newPin = document.getElementById('newPinInput').value.trim();
-  if (newPin.length < 4) { showToast('PIN must be at least 4 digits.', 'warn'); return; }
-  localStorage.setItem('icube_pin', newPin);
+  const p = document.getElementById('newPinInput').value.trim();
+  if (p.length < 4) { showToast('PIN must be at least 4 digits.','warn'); return; }
+  localStorage.setItem('icube_pin', p);
   document.getElementById('newPinInput').value = '';
-  showToast('PIN updated successfully.', 'success');
-}
-
-function saveConfig() {
-  localStorage.setItem('icube_webhook_url', DEFAULT_WEBHOOK_URL);
+  showToast('PIN updated.','success');
 }
 
 async function loadCSV() {
-  const url = localStorage.getItem('icube_csv_url') || DEFAULT_CSV_URL;
-  if (!url) { showToast('No CSV URL configured.', 'warn'); return; }
-  showToast('Loading data...', 'info');
+  showToast('Refreshing data...','info');
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Fetch failed');
-    const text = await res.text();
-    recipients = parseCSV(text);
-    localStorage.setItem('icube_recipients', JSON.stringify(recipients));
+    const res = await fetch(DEFAULT_CSV_URL);
+    if (!res.ok) throw new Error('Failed');
+    const parsed = parseCSV(await res.text());
+    if (parsed.length > 0) { recipients = parsed; localStorage.setItem('icube_recipients', JSON.stringify(recipients)); }
     await syncSubmissionsFromSheet();
     renderTable(); updateStats();
-    showToast('Loaded ' + recipients.length + ' recipients.', 'success');
-  } catch (e) { showToast('Failed to load CSV. Check URL and sharing settings.', 'error'); }
+    showToast('Loaded ' + recipients.length + ' recipients.','success');
+  } catch(e) { showToast('Failed to load data.','error'); }
 }
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
   return lines.slice(1).map(line => {
-    const vals = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      if (line[i] === '"') { inQ = !inQ; }
-      else if (line[i] === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
-      else { cur += line[i]; }
+    const vals=[]; let cur='',inQ=false;
+    for (let i=0;i<line.length;i++) {
+      if (line[i]==='"') { inQ=!inQ; }
+      else if (line[i]===',' && !inQ) { vals.push(cur.trim()); cur=''; }
+      else { cur+=line[i]; }
     }
     vals.push(cur.trim());
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    const obj={}; headers.forEach((h,i)=>obj[h]=vals[i]||'');
     return obj;
-  }).filter(r => r.Name && r.Name.trim());
+  }).filter(r=>r.Name&&r.Name.trim());
 }
 
 function renderTable() {
-  const query = (document.getElementById('tableSearch')?.value || '').toLowerCase();
+  const query = (document.getElementById('tableSearch')?.value||'').toLowerCase();
   const tbody = document.getElementById('recipientTableBody');
   tbody.innerHTML = '';
   const filtered = recipients.filter(r =>
     !query || r.Name.toLowerCase().includes(query) ||
-    (r.Hub || '').toLowerCase().includes(query) ||
-    (r['Program Name'] || r.Program || '').toLowerCase().includes(query) ||
-    (r.Role || '').toLowerCase().includes(query)
+    (r.Hub||'').toLowerCase().includes(query) ||
+    (r['Program Name']||r.Program||'').toLowerCase().includes(query) ||
+    (r.Role||'').toLowerCase().includes(query)
   );
   filtered.forEach(r => {
     const key = r.Name.toLowerCase().trim();
     const sub = submissions[key];
-    const hub = (r.Hub || '').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
-    const hubColor = hub === 'SIC' ? 'text-teal-700 bg-teal-50' : 'text-green-900 bg-green-50';
+    const hub = (r.Hub||'').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
+    const hubColor = hub==='SIC' ? 'text-teal-700 bg-teal-50' : 'text-green-900 bg-green-50';
     const hasReceipt = !!transferReceipts[key];
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="font-medium">${r.Name}</td>
       <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${hubColor}">${hub}</span></td>
-      <td class="text-slate-600">${r['Program Name'] || r.Program || '-'}</td>
-      <td class="text-slate-600">${r['Program Date'] || r.Date || '-'}</td>
-      <td class="text-slate-600">${r['Duration'] || '-'}</td>
-      <td class="text-slate-600">${r.Role || '-'}</td>
-      <td class="font-semibold">${r.Amount || '-'}</td>
-      <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${sub ? 'badge-submitted' : 'badge-pending'}">${sub ? 'Submitted' : 'Pending'}</span></td>
-      <td>${sub ? '<img src="' + sub.signature + '" title="Signature" style="height:32px;width:80px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff" />' : '<span class="text-slate-300 text-xs">—</span>'}</td>
-      <td>
-        ${sub ? `
-          <div style="display:flex;flex-direction:column;gap:4px;min-width:76px;">
-            <label style="cursor:pointer;display:block;text-align:center;font-size:0.68rem;font-weight:600;padding:3px 6px;border-radius:6px;border:1px solid ${hasReceipt ? '#bbf7d0' : '#bfdbfe'};background:${hasReceipt ? '#f0fdf4' : '#eff6ff'};color:${hasReceipt ? '#15803d' : '#1d4ed8'};">
-              ${hasReceipt ? '✓ Receipt' : '⬆ Receipt'}
-              <input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadReceipt('${key}', this)" />
-            </label>
-            <button onclick='downloadSinglePDF(${JSON.stringify(key)})' style="font-size:0.68rem;font-weight:600;padding:3px 6px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;text-align:center;">⬇ PDF</button>
-          </div>
-        ` : '<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
-      </td>
-    `;
+      <td class="text-slate-600">${r['Program Name']||r.Program||'-'}</td>
+      <td class="text-slate-600">${r['Program Date']||r.Date||'-'}</td>
+      <td class="text-slate-600">${r['Duration']||'-'}</td>
+      <td class="text-slate-600">${r.Role||'-'}</td>
+      <td class="font-semibold">${r.Amount||'-'}</td>
+      <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${sub?'badge-submitted':'badge-pending'}">${sub?'Submitted':'Pending'}</span></td>
+      <td>${sub?`<img src="${sub.signature}" style="height:32px;width:80px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff" />`:'<span style="color:#cbd5e1;">—</span>'}</td>
+      <td>${sub?`
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:80px;">
+          <label style="cursor:pointer;display:block;text-align:center;font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid ${hasReceipt?'#bbf7d0':'#fed7aa'};background:${hasReceipt?'#f0fdf4':'#fff7ed'};color:${hasReceipt?'#15803d':'#c2410c'};">
+            ${hasReceipt?'✓ Receipt':'⬆ Upload Receipt'}
+            <input type="file" accept="image/*" style="display:none" onchange="uploadReceipt('${key}',this)" />
+          </label>
+          <button onclick='downloadSinglePDF("${key}")' style="font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">⬇ PDF</button>
+        </div>`:'<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
+      </td>`;
     tbody.appendChild(tr);
   });
-  if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="10" class="text-center text-slate-400 py-8 text-sm">No recipients found.</td></tr>';
+  if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:32px;font-size:0.875rem;">No recipients found.</td></tr>';
 }
 
 function updateStats() {
   const total = recipients.length;
-  const submitted = Object.keys(submissions).filter(k => recipients.some(r => r.Name.toLowerCase().trim() === k)).length;
+  const submitted = Object.keys(submissions).filter(k=>recipients.some(r=>r.Name.toLowerCase().trim()===k)).length;
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statSubmitted').textContent = submitted;
-  document.getElementById('statPending').textContent = total - submitted;
+  document.getElementById('statPending').textContent = total-submitted;
+}
+
+function uploadReceipt(key, input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('Reading receipt...','info');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    const img = new Image();
+    img.onload = function() {
+      const maxW = 500;
+      const scale = Math.min(1, maxW/img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width*scale);
+      canvas.height = Math.round(img.height*scale);
+      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+      const compressed = canvas.toDataURL('image/jpeg',0.5);
+      transferReceipts[key] = compressed;
+      localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
+      showToast('✓ Receipt saved! Download PDF to save permanently.','success');
+      renderTable(); updateStats();
+    };
+    img.onerror = function() {
+      transferReceipts[key] = dataUrl;
+      localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
+      showToast('✓ Receipt saved! Download PDF now.','success');
+      renderTable(); updateStats();
+    };
+    img.src = dataUrl;
+  };
+  reader.onerror = function() { showToast('Could not read file. Try again.','error'); };
+  reader.readAsDataURL(file);
+}
+
+function buildPDFHTML(sub, key) {
+  const r = sub.recipient;
+  const hub = (r.Hub||'').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
+  const logoSrc = hub==='SIC'
+    ? 'https://wumalcolm.github.io/token-received-form/Logo-SIC.png'
+    : 'https://wumalcolm.github.io/token-received-form/Logo-BDIH.png';
+  const footerHTML = hub==='SIC'
+    ? '<strong>SMA | Sarikei Innovation Center</strong><br/>Jalan Nyelong, Bandar Sarikei, 96100 Sarikei, Sarawak<br/>M: +6017 2622101 &nbsp; E: admin@sarikeiinnovation.com &nbsp; W: www.sarikeiinnovation.com'
+    : '<strong>Betong Digital Innovation Hub</strong><br/>1st &amp; 2nd Floor, Sublot 21, Lot 2079, Block 9, Batu Api Land District,<br/>Medan Bandar Baru, 95700 Betong, Sarawak.';
+  const programDate = r['Program Date']||r.Date||'-';
+  const duration = r['Duration']||'';
+  const formattedDate = sub.timestamp ? new Date(sub.timestamp).toLocaleString('en-MY',{dateStyle:'long',timeStyle:'short'}) : '-';
+  const receiptImg = transferReceipts[key]||'';
+
+  return `<div style="font-family:Arial,sans-serif;width:794px;height:1123px;padding:32px 60px 20px 60px;box-sizing:border-box;background:#fff;color:#000;display:flex;flex-direction:column;">
+    <div style="margin-bottom:14px;"><img src="${logoSrc}" style="height:52px;max-width:190px;object-fit:contain;" /></div>
+    <div style="font-size:26px;font-weight:400;margin-bottom:16px;letter-spacing:-0.3px;">Token Received</div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;">
+      <tr><td style="width:34%;padding:3px 0;">Program Name</td><td style="padding:3px 0;">: &nbsp;<strong>${r['Program Name']||r.Program||'-'}</strong></td></tr>
+      <tr><td style="padding:3px 0;">Program Date</td><td style="padding:3px 0;">: &nbsp;${programDate}${duration?' &nbsp;('+duration+')':''}</td></tr>
+      <tr><td style="padding:3px 0;">Role</td><td style="padding:3px 0;">: &nbsp;${r.Role||'-'}</td></tr>
+    </table>
+    <div style="font-size:11px;margin-bottom:18px;line-height:2.2;">I, <u>&nbsp;&nbsp;${r.Name}&nbsp;&nbsp;</u> acknowledge received a total of <strong><u>${r.Amount||'-'}</u></strong> on the <u>&nbsp;&nbsp;${programDate}&nbsp;&nbsp;</u>.</div>
+    <div style="display:flex;gap:40px;margin-bottom:18px;">
+      <div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:28px;">Verified By:</div><div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div><div style="font-size:10px;line-height:1.6;">Malcolm Wu<br/>Strategic Manager</div></div>
+      <div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:28px;">Approved By:</div><div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div><div style="font-size:10px;line-height:1.6;">Melvin Liew<br/>CEO</div></div>
+    </div>
+    <div style="display:flex;gap:30px;align-items:flex-start;">
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;margin-bottom:4px;">Received By:</div>
+        <div style="height:52px;display:flex;align-items:flex-end;"><img src="${sub.signature}" style="max-height:50px;max-width:160px;object-fit:contain;" /></div>
+        <div style="border-bottom:1px solid #000;width:170px;margin-bottom:4px;">&nbsp;</div>
+        <div style="font-size:10px;">Name: ${r.Name}</div>
+        <div style="font-size:9px;color:#555;margin-top:2px;">Digitally signed on ${formattedDate}</div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;margin-bottom:6px;">Transfer Receipt:</div>
+        ${receiptImg
+          ? `<div style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;max-width:220px;"><img src="${receiptImg}" style="width:100%;max-height:150px;object-fit:contain;display:block;" /></div>`
+          : '<div style="width:220px;height:120px;border:1.5px dashed #cbd5e1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8fafc;"><div style="font-size:20px;">🧾</div><div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:4px;">No receipt uploaded</div></div>'
+        }
+      </div>
+    </div>
+    <div style="flex:1;"></div>
+    <div style="border-top:1px solid #ccc;padding-top:8px;text-align:center;font-size:8.5px;color:#555;line-height:1.8;">${footerHTML}</div>
+  </div>`;
+}
+
+function downloadSinglePDF(key) {
+  const sub = submissions[key];
+  if (!sub) { showToast('No submission found.','error'); return; }
+  const container = document.getElementById('pdfTemplate');
+  container.innerHTML = buildPDFHTML(sub, key);
+  const opt = { margin:0, filename:`TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} };
+  html2pdf().set(opt).from(container.firstElementChild).save().then(()=>{ container.innerHTML=''; showToast('PDF downloaded.','success'); });
+}
+
+async function downloadAllPDFs() {
+  const keys = Object.keys(submissions).filter(k=>recipients.some(r=>r.Name.toLowerCase().trim()===k));
+  if (keys.length===0) { showToast('No signed forms to download.','warn'); return; }
+  showToast('Generating '+keys.length+' PDFs...','info');
+  for (const key of keys) {
+    await new Promise(resolve => {
+      const sub = submissions[key];
+      const container = document.getElementById('pdfTemplate');
+      container.innerHTML = buildPDFHTML(sub, key);
+      const opt = { margin:0, filename:`TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} };
+      html2pdf().set(opt).from(container.firstElementChild).save().then(()=>{ container.innerHTML=''; setTimeout(resolve,800); });
+    });
+  }
+  showToast('All PDFs downloaded.','success');
 }
 
 function updateHubBranding(hub) {
   const area = document.getElementById('hubLogoArea');
-  if (hub === 'SIC') {
-    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#0d7d8a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;">SIC</div><div style="text-align:right;"><div style="font-size:10px;font-weight:700;color:#0d7d8a;">SARIKEI</div><div style="font-size:9px;color:#888;">Innovation Center</div></div></div>';
+  if (hub==='SIC') {
+    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#0d7d8a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;">SIC</div><div><div style="font-size:10px;font-weight:700;color:#0d7d8a;">SARIKEI</div><div style="font-size:9px;color:#888;">Innovation Center</div></div></div>';
   } else {
-    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#1a3a2a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;">BDIH</div><div style="text-align:right;"><div style="font-size:10px;font-weight:700;color:#1a3a2a;">BETONG</div><div style="font-size:9px;color:#888;">Digital Innovation Hub</div></div></div>';
+    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#1a3a2a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;">BDIH</div><div><div style="font-size:10px;font-weight:700;color:#1a3a2a;">BETONG</div><div style="font-size:9px;color:#888;">Digital Innovation Hub</div></div></div>';
   }
 }
 
 function showToast(msg, type='info') {
   const t = document.getElementById('toast');
-  const colors = { success:'#16a34a', error:'#dc2626', warn:'#d97706', info:'#0d7d8a' };
-  t.style.background = colors[type] || '#1e293b';
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3200);
+  const colors = {success:'#16a34a',error:'#dc2626',warn:'#d97706',info:'#0d7d8a'};
+  t.style.background = colors[type]||'#1e293b';
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
 }
 </script>
 </body>
