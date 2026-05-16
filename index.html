@@ -319,7 +319,7 @@ let lastX = 0, lastY = 0, hasSigned = false;
 let modalCurrentKey = null; // tracks which key the modal is open for
 
 const DEFAULT_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Zzpn--zk4SAApAp_Cwo3ogDmRnNa3Ku7i77wQbp1D-4/export?format=csv&gid=0';
-const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzIRCKp64E5mrFvGmUTiR0m6lJaZMwQIX9Ht0jv7_gLO24VKqZodYHUbke58T88YyKe/exec';
+const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwuUpRv9N__E-Bwt7ibtYGF1Fuuxv_fN15VQLWX7Yq5yidXstqK65hHEQBZChn4zN_R/exec';
 
 window.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
@@ -620,34 +620,66 @@ function updateStats() {
 function uploadReceipt(key, input) {
   const file = input.files[0];
   if (!file) return;
-  showToast('Reading receipt...','info');
+
+  showToast('Uploading receipt to Drive…', 'info');
+
   const reader = new FileReader();
   reader.onload = function(e) {
     const dataUrl = e.target.result;
+
+    // Compress before upload
     const img = new Image();
     img.onload = function() {
-      const maxW = 500;
-      const scale = Math.min(1, maxW/img.width);
+      const maxW = 900;
+      const scale = Math.min(1, maxW / img.width);
       const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width*scale);
-      canvas.height = Math.round(img.height*scale);
-      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-      const compressed = canvas.toDataURL('image/jpeg',0.5);
-      transferReceipts[key] = compressed;
-      localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
-      showToast('✓ Receipt saved! Click to preview before downloading PDF.','success');
-      renderTable(); updateStats();
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      sendReceiptToSheet(key, compressed);
     };
     img.onerror = function() {
-      transferReceipts[key] = dataUrl;
-      localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
-      showToast('✓ Receipt saved! Click to preview before downloading PDF.','success');
-      renderTable(); updateStats();
+      // Use raw dataUrl if image decode fails
+      sendReceiptToSheet(key, dataUrl);
     };
     img.src = dataUrl;
   };
-  reader.onerror = function() { showToast('Could not read file. Try again.','error'); };
+  reader.onerror = function() { showToast('Could not read file. Try again.', 'error'); };
   reader.readAsDataURL(file);
+}
+
+async function sendReceiptToSheet(key, imageDataUrl) {
+  // Find the real name from submissions
+  const sub = submissions[key];
+  const name = sub ? sub.name : key;
+
+  try {
+    const response = await fetch(DEFAULT_WEBHOOK_URL, {
+      method: 'POST',
+      mode: 'no-cors',           // Apps Script requires no-cors from external origin
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'uploadReceipt', name, imageData: imageDataUrl, mimeType: 'image/jpeg' })
+    });
+
+    // no-cors means we can't read the response body — so we poll the sheet
+    // after a short delay to get the Drive URL back via syncSubmissionsFromSheet
+    showToast('⏳ Saving to Drive, refreshing in a moment…', 'info');
+    setTimeout(async () => {
+      await syncSubmissionsFromSheet();
+      renderTable();
+      updateStats();
+      const driveUrl = transferReceipts[key];
+      if (driveUrl && driveUrl.startsWith('http')) {
+        showToast('✓ Receipt saved to Drive! Click to preview.', 'success');
+      } else {
+        showToast('⚠ Upload sent. If receipt doesn\'t appear, try Refresh.', 'warn');
+      }
+    }, 4000); // 4s grace for Apps Script to process
+
+  } catch (err) {
+    showToast('Upload failed: ' + err.message, 'error');
+  }
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
