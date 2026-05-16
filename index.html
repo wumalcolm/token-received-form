@@ -40,7 +40,7 @@
     .badge-submitted { background:#d1fae5; color:#065f46; }
 
     /* PDF template hidden off-screen */
-    #pdfTemplate { position:absolute; left:-9999px; top:0; width:210mm; }
+    #pdfTemplate { position:fixed; left:-9999px; top:0; width:794px; overflow:hidden; }
 
     /* Admin table — scrollable on mobile */
     .admin-table { min-width: 700px; }
@@ -118,8 +118,8 @@
   </div>
 
   <!-- RECIPIENT TAB -->
-  <div id="viewRecipient" class="flex-1 flex flex-col items-center justify-start p-4 py-6 fade-in" style="min-height:calc(100vh - 100px);">
-    <div id="stepLookup" class="card w-full max-w-md p-8">
+  <div id="viewRecipient" class="flex-1 flex flex-col items-center p-3 pt-5 pb-10 fade-in">
+    <div id="stepLookup" class="card w-full max-w-md" style="padding: 20px 16px;">
       <div class="text-center mb-6">
         <span class="text-3xl">📋</span>
         <h2 class="text-xl mt-2">Token Acknowledgement Form</h2>
@@ -134,13 +134,13 @@
       <p class="text-xs text-slate-400 text-center mt-4">Your information is only shown to you.</p>
     </div>
 
-    <div id="stepSign" class="card w-full max-w-lg p-8 hidden fade-in">
-      <div class="flex items-center gap-2 mb-4">
+    <div id="stepSign" class="card w-full max-w-lg hidden fade-in" style="padding: 16px;">
+      <div class="flex items-center gap-2 mb-3">
         <button onclick="resetLookup()" class="text-slate-400 hover:text-slate-600 text-xs flex items-center gap-1">← Back</button>
         <span class="text-xs text-slate-300">|</span>
         <span class="text-xs text-slate-400">Acknowledgement Form</span>
       </div>
-      <div id="recipientDetails" class="bg-slate-50 rounded-xl p-4 mb-5 border border-slate-100"></div>
+      <div id="recipientDetails" class="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100"></div>
       <div id="alreadySubmitted" class="hidden text-center py-4">
         <div class="text-3xl mb-2">✅</div>
         <p class="font-semibold text-green-700">You have already acknowledged this form.</p>
@@ -148,17 +148,17 @@
       </div>
       <div id="signArea">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Draw Your Signature Below</label>
-        <canvas id="signatureCanvas" height="160"></canvas>
+        <canvas id="signatureCanvas" height="130"></canvas>
         <div class="flex justify-between items-center mt-2">
           <button onclick="clearSignature()" class="text-xs text-slate-400 hover:text-red-400 transition">Clear Signature</button>
           <span class="text-xs text-slate-400" id="signHint">Use mouse or finger to sign</span>
         </div>
-        <button onclick="submitForm()" class="mt-5 w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg text-sm transition">Submit Acknowledgement</button>
-        <p class="text-xs text-slate-400 text-center mt-3">By submitting, you confirm receipt of the token stated above.</p>
+        <button onclick="submitForm()" class="mt-4 w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg text-sm transition">Submit Acknowledgement</button>
+        <p class="text-xs text-slate-400 text-center mt-2">By submitting, you confirm receipt of the token stated above.</p>
       </div>
     </div>
 
-    <div id="stepThankYou" class="card w-full max-w-md p-10 text-center hidden fade-in">
+    <div id="stepThankYou" class="card w-full max-w-md text-center hidden fade-in" style="padding: 32px 16px;">
       <div class="text-5xl mb-4">🙏</div>
       <h2 class="text-xl mb-2">Thank You!</h2>
       <p class="text-sm text-slate-500">Your acknowledgement has been recorded. You may now close this page.</p>
@@ -390,13 +390,13 @@ function showSignStep(r) {
   updateHubBranding(hub);
   const detailsEl = document.getElementById('recipientDetails');
   detailsEl.innerHTML = `
-    <div class="grid grid-cols-2 gap-3 text-sm">
-      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Name</div><div class="font-medium">${r.Name}</div></div>
-      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Hub</div><div class="font-medium">${r.Hub}</div></div>
-      <div class="col-span-2"><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Program</div><div class="font-medium">${r['Program Name'] || r.Program || '-'}</div></div>
-      <div class="col-span-2"><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Date & Duration</div><div class="font-medium">${r['Program Date'] || r.Date || '-'} &nbsp;·&nbsp; ${r['Duration'] || '-'}</div></div>
-      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Role</div><div class="font-medium">${r.Role || '-'}</div></div>
-      <div><div class="text-xs text-slate-400 uppercase font-semibold mb-0.5">Token Amount</div><div class="font-semibold text-teal-700 text-base">${r.Amount || '-'}</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.85rem;">
+      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Name</div><div style="font-weight:500;">${r.Name}</div></div>
+      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Hub</div><div style="font-weight:500;font-size:0.8rem;">${r.Hub}</div></div>
+      <div style="grid-column:1/-1;"><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Program</div><div style="font-weight:500;">${r['Program Name'] || r.Program || '-'}</div></div>
+      <div style="grid-column:1/-1;"><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Date & Duration</div><div style="font-weight:500;">${r['Program Date'] || r.Date || '-'} &nbsp;·&nbsp; ${r['Duration'] || '-'}</div></div>
+      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Role</div><div style="font-weight:500;">${r.Role || '-'}</div></div>
+      <div><div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px;">Token Amount</div><div style="font-weight:600;color:#0d7d8a;font-size:1rem;">${r.Amount || '-'}</div></div>
     </div>`;
 
   // Always sync from sheet first — sheet is source of truth
@@ -787,11 +787,11 @@ function downloadSinglePDF(key) {
   const container = document.getElementById('pdfTemplate');
   container.innerHTML = buildPDFHTML(sub, key);
   const opt = {
-    margin: 0,
+    margin: [0, 0, 0, 0],
     filename: `TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false, windowWidth: 794 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
   };
   html2pdf().set(opt).from(container.firstElementChild).save()
     .then(() => { container.innerHTML = ''; showToast('PDF downloaded.', 'success'); });
@@ -807,11 +807,11 @@ async function downloadAllPDFs() {
       const container = document.getElementById('pdfTemplate');
       container.innerHTML = buildPDFHTML(sub, key);
       const opt = {
-        margin: 0,
+        margin: [0, 0, 0, 0],
         filename: `TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false, windowWidth: 794 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
       };
       html2pdf().set(opt).from(container.firstElementChild).save()
         .then(() => { container.innerHTML = ''; setTimeout(resolve, 800); });
