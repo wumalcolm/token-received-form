@@ -18,26 +18,81 @@
       --text: #1e293b;
       --muted: #64748b;
     }
-    * { box-sizing: border-box; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text); min-height: 100vh; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text); min-height: 100vh; margin: 0; }
     h1, h2, h3 { font-family: 'DM Serif Display', serif; }
-    .tab-btn { transition: all 0.2s; }
+
+    /* Tabs */
+    .tab-btn { transition: all 0.2s; padding: 12px 8px; font-size: 0.875rem; white-space: nowrap; }
     .tab-btn.active { border-bottom: 3px solid var(--accent); color: #1e293b; font-weight: 600; }
     .tab-btn:not(.active) { color: var(--muted); border-bottom: 3px solid transparent; }
-    #signatureCanvas { border: 2px dashed #cbd5e1; border-radius: 8px; cursor: crosshair; touch-action: none; background: #fff; display: block; width: 100%; }
+
+    /* Canvas */
+    #signatureCanvas { border: 2px dashed #cbd5e1; border-radius: 8px; cursor: crosshair; touch-action: none; background: #fff; display: block; width: 100%; min-height: 140px; }
     #signatureCanvas.signed { border-color: #22c55e; border-style: solid; }
+
+    /* Card */
     .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+
+    /* Status badges */
     .badge-pending { background:#fef3c7; color:#92400e; }
     .badge-submitted { background:#d1fae5; color:#065f46; }
+
+    /* PDF template hidden off-screen */
     #pdfTemplate { position:absolute; left:-9999px; top:0; width:210mm; }
-    .admin-table th { background: #f1f5f9; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding: 10px 14px; }
-    .admin-table td { padding: 10px 14px; font-size: 0.875rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+
+    /* Admin table — scrollable on mobile */
+    .admin-table { min-width: 700px; }
+    .admin-table th { background: #f1f5f9; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding: 10px 12px; white-space: nowrap; }
+    .admin-table td { padding: 10px 12px; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
     .admin-table tr:last-child td { border-bottom: none; }
     .admin-table tr:hover td { background: #f8fafc; }
+
+    /* Buttons — touch-friendly */
+    button { cursor: pointer; min-height: 40px; }
+    input, button { font-family: 'DM Sans', sans-serif; }
+
+    /* Recipient view — center vertically on tall screens, top-align on short/mobile */
+    #viewRecipient { padding: 16px; padding-top: 24px; padding-bottom: 40px; }
+    #stepLookup, #stepSign, #stepThankYou { width: 100%; max-width: 480px; margin: 0 auto; }
+
+    /* Mobile-specific overrides */
+    @media (max-width: 640px) {
+      .card { border-radius: 12px; }
+      #stepLookup, #stepSign { padding: 20px 16px; }
+      #stepThankYou { padding: 32px 16px; }
+      .tab-btn { font-size: 0.8rem; padding: 10px 6px; }
+      #adminDashboard h2 { font-size: 1.1rem; }
+      .grid-cols-3-mobile { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-card { padding: 12px 8px; }
+      .stat-number { font-size: 1.4rem; }
+    }
+
+    /* Fade in */
     .fade-in { animation: fadeIn 0.4s ease both; }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-    #toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; padding: 12px 20px; border-radius: 10px; font-size: 0.875rem; font-weight: 500; color: #fff; background: #1e293b; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: opacity 0.3s; opacity: 0; pointer-events: none; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 20px; right: 16px; left: 16px; z-index: 9999;
+      padding: 12px 18px; border-radius: 10px; font-size: 0.875rem;
+      font-weight: 500; color: #fff; background: #1e293b;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transition: opacity 0.3s; opacity: 0; pointer-events: none;
+      text-align: center;
+    }
+    @media (min-width: 640px) {
+      #toast { left: auto; width: auto; max-width: 320px; text-align: left; }
+    }
     #toast.show { opacity: 1; }
+
+    /* Warning box */
+    .admin-warning { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.78rem; color: #92400e; line-height: 1.6; }
+
+    /* Config grid — stack on mobile */
+    .config-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 768px) { .config-grid { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
@@ -63,7 +118,7 @@
   </div>
 
   <!-- RECIPIENT TAB -->
-  <div id="viewRecipient" class="flex-1 flex flex-col items-center justify-center p-4 py-10 fade-in">
+  <div id="viewRecipient" class="flex-1 flex flex-col items-center justify-start p-4 py-6 fade-in" style="min-height:calc(100vh - 100px);">
     <div id="stepLookup" class="card w-full max-w-md p-8">
       <div class="text-center mb-6">
         <span class="text-3xl">📋</span>
@@ -111,7 +166,7 @@
   </div>
 
   <!-- ADMIN TAB -->
-  <div id="viewAdmin" class="hidden flex-1 p-4 py-8 max-w-5xl mx-auto w-full fade-in">
+  <div id="viewAdmin" class="hidden flex-1 p-3 py-6 w-full fade-in" style="max-width:1024px;margin:0 auto;">
     <div id="adminPinGate" class="card max-w-sm mx-auto p-8">
       <h2 class="text-lg mb-1">Admin Access</h2>
       <p class="text-sm text-slate-500 mb-5">Enter your PIN to continue.</p>
@@ -124,17 +179,17 @@
     </div>
 
     <div id="adminDashboard" class="hidden">
-      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
           <h2 class="text-xl">Admin Dashboard</h2>
           <p class="text-sm text-slate-500">Manage recipients and download signed forms.</p>
         </div>
         <div class="flex gap-2">
-          <button onclick="downloadAllPDFs()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">⬇ Download All Signed PDFs</button>
-          <button onclick="adminLogout()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm px-4 py-2 rounded-lg transition">Lock</button>
+          <button onclick="downloadAllPDFs()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">⬇ All PDFs</button>
+          <button onclick="adminLogout()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-2 rounded-lg transition">Lock</button>
         </div>
       </div>
-      <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-xs text-amber-800 leading-relaxed">
+      <div class="admin-warning">
         <strong>⚠️ Transfer Receipt Note:</strong> Receipt screenshots are saved locally in <strong>this browser only</strong> on this device. They will be lost if you clear browser cache or switch devices.
         <br/>To avoid data loss: <strong>(1)</strong> Always upload receipts on this desktop browser. <strong>(2)</strong> Download PDFs immediately after uploading receipts as your permanent record. <strong>(3)</strong> Do not clear browser site data for this page.
 
@@ -142,7 +197,7 @@
 
       <div class="card p-5 mb-6">
         <h3 class="font-semibold text-sm mb-3 flex items-center gap-2">⚙️ Configuration</h3>
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="config-grid">
           <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Google Sheet CSV URL (Recipients)</label>
             <input id="csvUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv"
@@ -165,17 +220,17 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-4 mb-6">
-        <div class="card p-4 text-center">
-          <div class="text-2xl font-bold text-teal-600" id="statTotal">0</div>
-          <div class="text-xs text-slate-500 mt-1">Total Recipients</div>
+      <div class="grid grid-cols-3 gap-2 mb-5 grid-cols-3-mobile">
+        <div class="card stat-card p-3 text-center">
+          <div class="stat-number text-2xl font-bold text-teal-600" id="statTotal">0</div>
+          <div class="text-xs text-slate-500 mt-1">Total</div>
         </div>
-        <div class="card p-4 text-center">
-          <div class="text-2xl font-bold text-green-600" id="statSubmitted">0</div>
+        <div class="card stat-card p-3 text-center">
+          <div class="stat-number text-2xl font-bold text-green-600" id="statSubmitted">0</div>
           <div class="text-xs text-slate-500 mt-1">Signed</div>
         </div>
-        <div class="card p-4 text-center">
-          <div class="text-2xl font-bold text-amber-500" id="statPending">0</div>
+        <div class="card stat-card p-3 text-center">
+          <div class="stat-number text-2xl font-bold text-amber-500" id="statPending">0</div>
           <div class="text-xs text-slate-500 mt-1">Pending</div>
         </div>
       </div>
@@ -183,7 +238,7 @@
       <div class="card overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex justify-between items-center">
           <span class="font-semibold text-sm">Recipients</span>
-          <input id="tableSearch" onkeyup="renderTable()" type="text" placeholder="Search…" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-teal-400 w-48" />
+          <input id="tableSearch" onkeyup="renderTable()" type="text" placeholder="Search…" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-teal-400" style="width:160px;" />
         </div>
         <div class="overflow-x-auto">
           <table class="admin-table w-full">
@@ -706,7 +761,7 @@ function buildPDFHTML(sub, key) {
     </div><!-- end hidden old received by -->
 
     <!-- Footer -->
-    <div style="position:absolute;bottom:10mm;left:18mm;right:18mm;border-top:1px solid #ccc;padding-top:5px;text-align:center;font-size:8.5px;color:#555;line-height:1.7;">
+    <div style="border-top:1px solid #ccc;padding-top:5px;text-align:center;font-size:8px;color:#555;line-height:1.8;margin-top:auto;">
       ${footerHTML}
     </div>
 
