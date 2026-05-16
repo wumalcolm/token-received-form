@@ -731,9 +731,9 @@ async function uploadReceipt(key, input) {
   const webhook = DEFAULT_WEBHOOK_URL;
   if (!webhook) { showToast('No webhook configured.', 'error'); return; }
 
-  showToast('Compressing and uploading...', 'info');
+  showToast('Compressing image...', 'info');
 
-  // Compress image using canvas before sending
+  // Compress image
   const compressImage = (file, maxWidth, quality) => new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -742,8 +742,7 @@ async function uploadReceipt(key, input) {
       const scale = Math.min(1, maxWidth / img.width);
       canvas.width = img.width * scale;
       canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
@@ -751,41 +750,76 @@ async function uploadReceipt(key, input) {
   });
 
   try {
-    const compressed = await compressImage(file, 800, 0.6);
+    const compressed = await compressImage(file, 600, 0.5);
     const base64 = compressed.split(',')[1];
     const recipientName = submissions[key]?.name || key;
-    const program = submissions[key]?.recipient?.['Program Name'] || submissions[key]?.recipient?.Program || '';
-
     const sizeKB = Math.round(base64.length * 0.75 / 1024);
-    showToast(`Sending ${sizeKB}KB to Drive...`, 'info');
+    showToast(`Uploading ${sizeKB}KB...`, 'info');
 
-    fetch(webhook, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
+    // Use JSONP-style upload via script tag to bypass CORS
+    await new Promise((resolve, reject) => {
+      const cbName = 'uploadCb_' + Date.now();
+      const scriptEl = document.createElement('script');
+      let done = false;
+
+      // Encode payload as URL params (limited but works for small files)
+      const payload = encodeURIComponent(JSON.stringify({
         action: 'uploadReceipt',
         name: recipientName,
-        program: program,
-        filename: recipientName.replace(/\s+/g,'_') + '_receipt.jpg',
+        filename: recipientName.replace(/[^a-zA-Z0-9]/g,'_') + '_receipt.jpg',
         mimeType: 'image/jpeg',
-        fileData: base64
-      })
+        fileData: base64,
+        callback: cbName
+      }));
+
+      window[cbName] = function(result) {
+        done = true;
+        delete window[cbName];
+        if (document.body.contains(scriptEl)) document.body.removeChild(scriptEl);
+        if (result && result.status === 'ok') {
+          transferReceipts[key] = result.link || 'uploaded';
+          renderTable(); updateStats();
+          showToast('✓ Receipt saved to Google Drive!', 'success');
+        } else {
+          showToast('Upload error: ' + (result?.message || 'unknown'), 'error');
+        }
+        resolve();
+      };
+
+      scriptEl.onerror = () => {
+        if (!done) {
+          done = true;
+          // Fallback: try no-cors POST
+          fetch(webhook, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'uploadReceipt',
+              name: recipientName,
+              filename: recipientName.replace(/[^a-zA-Z0-9]/g,'_') + '_receipt.jpg',
+              mimeType: 'image/jpeg',
+              fileData: base64
+            })
+          }).then(() => {
+            showToast('Receipt sent. Refreshing in 10s...', 'info');
+            setTimeout(async () => {
+              await syncSubmissionsFromSheet();
+              renderTable(); updateStats();
+              showToast(transferReceipts[key] ? '✓ Receipt saved!' : 'Refresh to confirm.', 'success');
+            }, 10000);
+          }).catch(() => showToast('Upload failed.', 'error'));
+          resolve();
+        }
+      };
+
+      setTimeout(() => { if (!done) { done = true; resolve(); } }, 8000);
+      scriptEl.src = webhook + '?data=' + payload;
+      document.body.appendChild(scriptEl);
     });
 
-    showToast('Sent! Checking Drive in 8s...', 'info');
-    setTimeout(async () => {
-      await syncSubmissionsFromSheet();
-      renderTable(); updateStats();
-      if (transferReceipts[key]) {
-        showToast('✓ Receipt saved to Google Drive!', 'success');
-      } else {
-        showToast('Uploaded. If not visible, wait 30s and click Refresh.', 'success');
-      }
-    }, 8000);
-
   } catch(err) {
-    showToast('Upload error: ' + err.message, 'error');
+    showToast('Error: ' + err.message, 'error');
   }
 }
 
