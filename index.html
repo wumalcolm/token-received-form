@@ -275,6 +275,7 @@ function showSignStep(r) {
   } else {
     document.getElementById('alreadySubmitted').classList.add('hidden');
     document.getElementById('signArea').classList.remove('hidden');
+    setTimeout(() => resizeCanvas(), 50);
     clearSignature();
   }
 }
@@ -292,7 +293,7 @@ function resetLookup() {
 function initCanvas() {
   const canvas = document.getElementById('signatureCanvas');
   ctx = canvas.getContext('2d');
-  resizeCanvas();
+  setTimeout(() => resizeCanvas(), 100);
   window.addEventListener('resize', resizeCanvas);
   canvas.addEventListener('mousedown', startDraw);
   canvas.addEventListener('mousemove', draw);
