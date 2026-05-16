@@ -166,7 +166,7 @@
   </div>
 
   <!-- ADMIN TAB -->
-  <div id="viewAdmin" class="hidden flex-1 p-3 py-6 w-full fade-in" style="max-width:1024px;margin:0 auto;">
+  <div id="viewAdmin" class="hidden flex-1 w-full fade-in" style="max-width:1024px;margin:0 auto;padding:12px;">
     <div id="adminPinGate" class="card max-w-sm mx-auto p-8">
       <h2 class="text-lg mb-1">Admin Access</h2>
       <p class="text-sm text-slate-500 mb-5">Enter your PIN to continue.</p>
@@ -179,10 +179,10 @@
     </div>
 
     <div id="adminDashboard" class="hidden">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div class="flex items-center justify-between gap-2 mb-4">
         <div>
-          <h2 class="text-xl">Admin Dashboard</h2>
-          <p class="text-sm text-slate-500">Manage recipients and download signed forms.</p>
+          <h2 style="font-size:1.1rem;font-weight:700;margin:0;">Admin Dashboard</h2>
+          <p style="font-size:0.75rem;color:#64748b;margin:2px 0 0 0;">Manage recipients and signed forms.</p>
         </div>
         <div class="flex gap-2">
           <button onclick="downloadAllPDFs()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">⬇ All PDFs</button>
@@ -197,33 +197,35 @@
       <input id="csvUrl" type="hidden" />
       <input id="webhookUrl" type="hidden" />
 
-      <!-- PIN + Refresh only -->
-      <div class="card p-4 mb-5 flex flex-wrap items-center gap-3">
-        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Change PIN</span>
-        <input id="newPinInput" type="password" maxlength="8" placeholder="New PIN" class="border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 w-28 tracking-widest" />
-        <button onclick="changePin()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">Update PIN</button>
-        <button onclick="loadCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-lg transition">🔄 Refresh Data</button>
+      <!-- PIN + Refresh -->
+      <div class="card p-3 mb-4">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+          <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;white-space:nowrap;">Change PIN</span>
+          <input id="newPinInput" type="password" maxlength="8" placeholder="New PIN" style="border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:0.8rem;outline:none;width:90px;letter-spacing:0.15em;" />
+          <button onclick="changePin()" style="background:#f59e0b;color:#fff;font-size:0.75rem;font-weight:600;padding:6px 12px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;">Update PIN</button>
+          <button onclick="loadCSV()" style="background:#f1f5f9;color:#475569;font-size:0.75rem;font-weight:600;padding:6px 12px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;">🔄 Refresh</button>
+        </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-2 mb-5 grid-cols-3-mobile">
-        <div class="card stat-card p-3 text-center">
-          <div class="stat-number text-2xl font-bold text-teal-600" id="statTotal">0</div>
-          <div class="text-xs text-slate-500 mt-1">Total</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+        <div class="card" style="padding:10px 8px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:700;color:#0d9488;" id="statTotal">0</div>
+          <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Total</div>
         </div>
-        <div class="card stat-card p-3 text-center">
-          <div class="stat-number text-2xl font-bold text-green-600" id="statSubmitted">0</div>
-          <div class="text-xs text-slate-500 mt-1">Signed</div>
+        <div class="card" style="padding:10px 8px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:700;color:#16a34a;" id="statSubmitted">0</div>
+          <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Signed</div>
         </div>
-        <div class="card stat-card p-3 text-center">
-          <div class="stat-number text-2xl font-bold text-amber-500" id="statPending">0</div>
-          <div class="text-xs text-slate-500 mt-1">Pending</div>
+        <div class="card" style="padding:10px 8px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:700;color:#f59e0b;" id="statPending">0</div>
+          <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Pending</div>
         </div>
       </div>
 
       <div class="card overflow-hidden">
-        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
-          <span class="font-semibold text-sm">Recipients</span>
-          <input id="tableSearch" onkeyup="renderTable()" type="text" placeholder="Search…" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-teal-400" style="width:160px;" />
+        <div style="padding:12px;border-bottom:1px solid #f1f5f9;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
+          <span style="font-weight:600;font-size:0.875rem;">Recipients</span>
+          <input id="tableSearch" onkeyup="renderTable()" type="text" placeholder="Search…" style="border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:0.8rem;outline:none;min-width:120px;flex:1;max-width:200px;" />
         </div>
         <div class="overflow-x-auto">
           <table class="admin-table w-full">
@@ -726,39 +728,65 @@ function buildPDFHTML(sub, key) {
 async function uploadReceipt(key, input) {
   const file = input.files[0];
   if (!file) return;
-  const webhook = localStorage.getItem('icube_webhook_url') || DEFAULT_WEBHOOK_URL;
-  if (!webhook) { showToast('No webhook URL configured.', 'error'); return; }
-  showToast('Uploading receipt to Drive...', 'info');
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    const base64 = e.target.result.split(',')[1];
+  const webhook = DEFAULT_WEBHOOK_URL;
+  if (!webhook) { showToast('No webhook configured.', 'error'); return; }
+
+  showToast('Compressing and uploading...', 'info');
+
+  // Compress image using canvas before sending
+  const compressImage = (file, maxWidth, quality) => new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(1, maxWidth / img.width);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = url;
+  });
+
+  try {
+    const compressed = await compressImage(file, 800, 0.6);
+    const base64 = compressed.split(',')[1];
     const recipientName = submissions[key]?.name || key;
     const program = submissions[key]?.recipient?.['Program Name'] || submissions[key]?.recipient?.Program || '';
-    try {
-      fetch(webhook, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          action: 'uploadReceipt',
-          name: recipientName,
-          program: program,
-          filename: file.name || 'receipt.jpg',
-          mimeType: file.type || 'image/jpeg',
-          fileData: base64
-        })
-      });
-      showToast('Receipt sent. Syncing in 5s...', 'info');
-      setTimeout(async () => {
-        await syncSubmissionsFromSheet();
-        renderTable(); updateStats();
-        showToast(transferReceipts[key] ? 'Receipt saved to Drive.' : 'Receipt uploaded. Refresh to confirm.', 'success');
-      }, 5000);
-    } catch(err) {
-      showToast('Upload failed. Check webhook URL.', 'error');
-    }
-  };
-  reader.readAsDataURL(file);
+
+    const sizeKB = Math.round(base64.length * 0.75 / 1024);
+    showToast(`Sending ${sizeKB}KB to Drive...`, 'info');
+
+    fetch(webhook, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'uploadReceipt',
+        name: recipientName,
+        program: program,
+        filename: recipientName.replace(/\s+/g,'_') + '_receipt.jpg',
+        mimeType: 'image/jpeg',
+        fileData: base64
+      })
+    });
+
+    showToast('Sent! Checking Drive in 8s...', 'info');
+    setTimeout(async () => {
+      await syncSubmissionsFromSheet();
+      renderTable(); updateStats();
+      if (transferReceipts[key]) {
+        showToast('✓ Receipt saved to Google Drive!', 'success');
+      } else {
+        showToast('Uploaded. If not visible, wait 30s and click Refresh.', 'success');
+      }
+    }, 8000);
+
+  } catch(err) {
+    showToast('Upload error: ' + err.message, 'error');
+  }
 }
 
 function downloadSinglePDF(key) {
