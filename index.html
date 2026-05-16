@@ -152,7 +152,7 @@
         </div>
         <div class="overflow-x-auto">
           <table class="admin-table w-full">
-            <thead><tr><th>Name</th><th>Hub</th><th>Program</th><th>Date</th><th>Duration</th><th>Role</th><th>Amount</th><th>Status</th><th>Signed</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Name</th><th>Hub</th><th>Program</th><th>Date</th><th>Duration</th><th>Role</th><th>Amount</th><th>Status</th><th>Signed</th><th>Receipt</th><th>PDF</th></tr></thead>
             <tbody id="recipientTableBody"></tbody>
           </table>
         </div>
@@ -425,18 +425,18 @@ function renderTable() {
       <td class="font-semibold">${r.Amount||'-'}</td>
       <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${sub?'badge-submitted':'badge-pending'}">${sub?'Submitted':'Pending'}</span></td>
       <td>${sub?`<img src="${sub.signature}" style="height:32px;width:80px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff" />`:'<span style="color:#cbd5e1;">—</span>'}</td>
-      <td>${sub?`
-        <div style="display:flex;flex-direction:column;gap:4px;min-width:80px;">
-          <label style="cursor:pointer;display:block;text-align:center;font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid ${hasReceipt?'#bbf7d0':'#fed7aa'};background:${hasReceipt?'#f0fdf4':'#fff7ed'};color:${hasReceipt?'#15803d':'#c2410c'};">
-            ${hasReceipt?'✓ Receipt':'⬆ Upload Receipt'}
-            <input type="file" accept="image/*" style="display:none" onchange="uploadReceipt('${key}',this)" />
-          </label>
-          <button onclick='downloadSinglePDF("${key}")' style="font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">⬇ PDF</button>
-        </div>`:'<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
+      <td>
+        ${sub?`<label style="cursor:pointer;display:block;text-align:center;font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid ${hasReceipt?'#bbf7d0':'#fed7aa'};background:${hasReceipt?'#f0fdf4':'#fff7ed'};color:${hasReceipt?'#15803d':'#c2410c'};white-space:nowrap;">
+          ${hasReceipt?'✓ Uploaded':'⬆ Upload'}
+          <input type="file" accept="image/*" style="display:none" onchange="uploadReceipt('${key}',this)" />
+        </label>`:'<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
+      </td>
+      <td>
+        ${sub?`<button onclick='downloadSinglePDF("${key}")' style="font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;white-space:nowrap;">⬇ PDF</button>`:'<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
       </td>`;
     tbody.appendChild(tr);
   });
-  if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:32px;font-size:0.875rem;">No recipients found.</td></tr>';
+  if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#94a3b8;padding:32px;font-size:0.875rem;">No recipients found.</td></tr>';
 }
 
 function updateStats() {
@@ -502,10 +502,10 @@ function buildPDFHTML(sub, key) {
       <tr><td style="padding:3px 0;">Program Date</td><td style="padding:3px 0;">: &nbsp;${programDate}${duration?' &nbsp;('+duration+')':''}</td></tr>
       <tr><td style="padding:3px 0;">Role</td><td style="padding:3px 0;">: &nbsp;${r.Role||'-'}</td></tr>
     </table>
-    <div style="font-size:11px;margin-bottom:32px;line-height:2.2;">I, <u>&nbsp;&nbsp;${r.Name}&nbsp;&nbsp;</u> acknowledge received a total of <strong><u>${r.Amount||'-'}</u></strong> on the <u>&nbsp;&nbsp;${programDate}&nbsp;&nbsp;</u>.</div>
-    <div style="display:flex;gap:40px;margin-bottom:18px;">
-      <div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:28px;">Verified By:</div><div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div><div style="font-size:10px;line-height:1.6;">Malcolm Wu<br/>Strategic Manager</div></div>
-      <div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:28px;">Approved By:</div><div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div><div style="font-size:10px;line-height:1.6;">Melvin Liew<br/>CEO</div></div>
+    <div style="font-size:11px;margin-top:20px;margin-bottom:40px;line-height:2.2;">I, <u>&nbsp;&nbsp;${r.Name}&nbsp;&nbsp;</u> acknowledge received a total of <strong><u>${r.Amount||'-'}</u></strong> on the <u>&nbsp;&nbsp;${programDate}&nbsp;&nbsp;</u>.</div>
+    <div style="display:flex;gap:40px;margin-bottom:22px;">
+      <div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:36px;">Verified By:</div><div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div><div style="font-size:10px;line-height:1.6;">Malcolm Wu<br/>Strategic Manager</div></div>
+      <div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:36px;">Approved By:</div><div style="border-bottom:1px solid #000;width:160px;margin-bottom:4px;">&nbsp;</div><div style="font-size:10px;line-height:1.6;">Melvin Liew<br/>CEO</div></div>
     </div>
     <div style="display:flex;gap:30px;align-items:flex-start;">
       <div style="flex:1;">
