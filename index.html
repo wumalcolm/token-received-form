@@ -36,11 +36,162 @@
     @media(min-width:640px){ #toast{left:auto;width:auto;max-width:360px;text-align:left;} }
     #toast.show { opacity:1; }
     @media(max-width:640px){ .card{border-radius:12px;} .tab-btn{font-size:0.8rem;padding:10px 6px;} }
+
+    /* ── Preview Modal ── */
+    #previewModal {
+      position:fixed; inset:0; z-index:1000;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(15,23,42,0.6);
+      backdrop-filter:blur(4px);
+      opacity:0; pointer-events:none;
+      transition:opacity 0.25s ease;
+    }
+    #previewModal.open { opacity:1; pointer-events:all; }
+    #previewModalBox {
+      background:#fff; border-radius:20px;
+      box-shadow:0 24px 64px rgba(0,0,0,0.22);
+      width:92vw; max-width:720px;
+      max-height:92vh; overflow-y:auto;
+      transform:translateY(16px) scale(0.98);
+      transition:transform 0.25s ease;
+      padding:0;
+    }
+    #previewModal.open #previewModalBox { transform:translateY(0) scale(1); }
+
+    .modal-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 22px 14px 22px;
+      border-bottom:1px solid #f1f5f9;
+      position:sticky; top:0; background:#fff; z-index:2;
+      border-radius:20px 20px 0 0;
+    }
+    .modal-close-btn {
+      width:32px; height:32px; min-height:32px; border-radius:50%;
+      border:none; background:#f1f5f9; color:#64748b;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem; line-height:1; cursor:pointer;
+      transition:background 0.15s;
+    }
+    .modal-close-btn:hover { background:#e2e8f0; color:#1e293b; }
+    .modal-body { padding:20px 22px 22px 22px; }
+
+    .modal-meta-grid {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:6px 16px; margin-bottom:18px;
+      background:#f8fafc; border-radius:12px;
+      padding:12px 16px; border:1px solid #f1f5f9;
+      font-size:0.8rem;
+    }
+    .modal-meta-grid .meta-item .label {
+      font-size:0.62rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.07em; color:#94a3b8; margin-bottom:2px;
+    }
+    .modal-meta-grid .meta-item .value { font-weight:500; color:#1e293b; }
+    .modal-meta-grid .meta-item.full { grid-column:1/-1; }
+
+    .modal-evidence-row {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:14px; margin-bottom:20px;
+    }
+    @media(max-width:520px){ .modal-evidence-row { grid-template-columns:1fr; } .modal-meta-grid { grid-template-columns:1fr; } }
+
+    .evidence-panel {
+      border:1px solid #e2e8f0; border-radius:12px;
+      overflow:hidden; background:#f8fafc;
+    }
+    .evidence-panel-header {
+      padding:8px 12px;
+      font-size:0.68rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.07em; color:#64748b;
+      background:#f1f5f9; border-bottom:1px solid #e2e8f0;
+    }
+    .evidence-panel-body {
+      display:flex; align-items:center; justify-content:center;
+      min-height:160px; padding:12px; background:#fff;
+    }
+    .evidence-panel-body img {
+      max-width:100%; max-height:220px;
+      object-fit:contain; border-radius:6px;
+    }
+    .evidence-placeholder {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; gap:6px; color:#94a3b8;
+    }
+    .evidence-placeholder .icon { font-size:2rem; }
+    .evidence-placeholder span { font-size:0.75rem; text-align:center; }
+
+    .modal-footer {
+      display:flex; gap:10px; flex-wrap:wrap;
+      padding-top:14px; border-top:1px solid #f1f5f9;
+      justify-content:flex-end;
+    }
+    .btn-dl-pdf {
+      background:#16a34a; color:#fff;
+      font-size:0.82rem; font-weight:600;
+      padding:10px 20px; border-radius:10px;
+      border:none; cursor:pointer; display:flex;
+      align-items:center; gap:6px; transition:background 0.15s;
+      min-height:40px;
+    }
+    .btn-dl-pdf:hover { background:#15803d; }
+    .btn-close-modal {
+      background:#f1f5f9; color:#475569;
+      font-size:0.82rem; font-weight:600;
+      padding:10px 20px; border-radius:10px;
+      border:none; cursor:pointer; min-height:40px;
+      transition:background 0.15s;
+    }
+    .btn-close-modal:hover { background:#e2e8f0; }
+
+    .signed-on-badge {
+      font-size:0.7rem; color:#64748b;
+      background:#f1f5f9; border-radius:6px;
+      padding:4px 10px; display:inline-block;
+      margin-top:6px;
+    }
   </style>
 </head>
 <body>
 <div id="toast"></div>
 <div id="pdfTemplate"></div>
+
+<!-- ── Preview Modal ── -->
+<div id="previewModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="handleModalBackdropClick(event)">
+  <div id="previewModalBox">
+    <div class="modal-header">
+      <div>
+        <h3 id="modalTitle" style="margin:0;font-size:1rem;font-weight:700;font-family:'DM Serif Display',serif;">Receipt Preview</h3>
+        <p style="margin:2px 0 0;font-size:0.72rem;color:#64748b;" id="modalSubtitle">—</p>
+      </div>
+      <button class="modal-close-btn" onclick="closePreviewModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Recipient meta -->
+      <div class="modal-meta-grid" id="modalMeta"></div>
+      <!-- Evidence -->
+      <div class="modal-evidence-row">
+        <div class="evidence-panel">
+          <div class="evidence-panel-header">📄 Transfer Receipt</div>
+          <div class="evidence-panel-body" id="modalReceiptBody">
+            <div class="evidence-placeholder"><span class="icon">🧾</span><span>No receipt uploaded</span></div>
+          </div>
+        </div>
+        <div class="evidence-panel">
+          <div class="evidence-panel-header">✍️ Signature</div>
+          <div class="evidence-panel-body" id="modalSignatureBody">
+            <div class="evidence-placeholder"><span class="icon">—</span><span>No signature found</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn-close-modal" onclick="closePreviewModal()">Close</button>
+        <button class="btn-dl-pdf" id="modalDownloadBtn" onclick="modalDownloadPDF()">⬇ Download PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="min-h-screen flex flex-col">
 
   <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between" style="box-shadow:0 1px 4px rgba(0,0,0,0.06)">
@@ -165,6 +316,7 @@
 let recipients = [], submissions = {}, transferReceipts = {};
 let currentRecipient = null, isDrawing = false, ctx = null;
 let lastX = 0, lastY = 0, hasSigned = false;
+let modalCurrentKey = null; // tracks which key the modal is open for
 
 const DEFAULT_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Zzpn--zk4SAApAp_Cwo3ogDmRnNa3Ku7i77wQbp1D-4/export?format=csv&gid=0';
 const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzIRCKp64E5mrFvGmUTiR0m6lJaZMwQIX9Ht0jv7_gLO24VKqZodYHUbke58T88YyKe/exec';
@@ -176,6 +328,8 @@ window.addEventListener('DOMContentLoaded', () => {
   localStorage.setItem('icube_webhook_url', DEFAULT_WEBHOOK_URL);
   if (!localStorage.getItem('icube_pin')) localStorage.setItem('icube_pin', '1234');
   autoLoadCSV(DEFAULT_CSV_URL);
+  // Close modal on Escape key
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreviewModal(); });
 });
 
 function loadFromStorage() {
@@ -415,6 +569,27 @@ function renderTable() {
     const hubColor = hub==='SIC' ? 'text-teal-700 bg-teal-50' : 'text-green-900 bg-green-50';
     const hasReceipt = !!transferReceipts[key];
     const tr = document.createElement('tr');
+
+    // Receipt cell: Upload button OR clickable "✓ Uploaded" preview button
+    let receiptCell = '<span style="color:#cbd5e1;font-size:0.75rem;">—</span>';
+    if (sub) {
+      if (hasReceipt) {
+        receiptCell = `
+          <button
+            onclick="openPreviewModal('${key}')"
+            style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;white-space:nowrap;min-height:0;">
+            ✓ Uploaded
+            <span style="font-size:0.6rem;opacity:0.7;">· Preview</span>
+          </button>`;
+      } else {
+        receiptCell = `
+          <label style="cursor:pointer;display:block;text-align:center;font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid #fed7aa;background:#fff7ed;color:#c2410c;white-space:nowrap;">
+            ⬆ Upload
+            <input type="file" accept="image/*" style="display:none" onchange="uploadReceipt('${key}',this)" />
+          </label>`;
+      }
+    }
+
     tr.innerHTML = `
       <td class="font-medium">${r.Name}</td>
       <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${hubColor}">${hub}</span></td>
@@ -425,12 +600,7 @@ function renderTable() {
       <td class="font-semibold">${r.Amount||'-'}</td>
       <td><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${sub?'badge-submitted':'badge-pending'}">${sub?'Submitted':'Pending'}</span></td>
       <td>${sub?`<img src="${sub.signature}" style="height:32px;width:80px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff" />`:'<span style="color:#cbd5e1;">—</span>'}</td>
-      <td>
-        ${sub?`<label style="cursor:pointer;display:block;text-align:center;font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid ${hasReceipt?'#bbf7d0':'#fed7aa'};background:${hasReceipt?'#f0fdf4':'#fff7ed'};color:${hasReceipt?'#15803d':'#c2410c'};white-space:nowrap;">
-          ${hasReceipt?'✓ Uploaded':'⬆ Upload'}
-          <input type="file" accept="image/*" style="display:none" onchange="uploadReceipt('${key}',this)" />
-        </label>`:'<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
-      </td>
+      <td>${receiptCell}</td>
       <td>
         ${sub?`<button onclick='downloadSinglePDF("${key}")' style="font-size:0.68rem;font-weight:600;padding:4px 8px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;white-space:nowrap;">⬇ PDF</button>`:'<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
       </td>`;
@@ -465,13 +635,13 @@ function uploadReceipt(key, input) {
       const compressed = canvas.toDataURL('image/jpeg',0.5);
       transferReceipts[key] = compressed;
       localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
-      showToast('✓ Receipt saved! Download PDF to save permanently.','success');
+      showToast('✓ Receipt saved! Click to preview before downloading PDF.','success');
       renderTable(); updateStats();
     };
     img.onerror = function() {
       transferReceipts[key] = dataUrl;
       localStorage.setItem('icube_transfer_receipts', JSON.stringify(transferReceipts));
-      showToast('✓ Receipt saved! Download PDF now.','success');
+      showToast('✓ Receipt saved! Click to preview before downloading PDF.','success');
       renderTable(); updateStats();
     };
     img.src = dataUrl;
@@ -479,6 +649,66 @@ function uploadReceipt(key, input) {
   reader.onerror = function() { showToast('Could not read file. Try again.','error'); };
   reader.readAsDataURL(file);
 }
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+
+function openPreviewModal(key) {
+  const sub = submissions[key];
+  if (!sub) return;
+  const r = sub.recipient || {};
+  modalCurrentKey = key;
+
+  // Title
+  document.getElementById('modalTitle').textContent = 'Receipt Preview';
+  document.getElementById('modalSubtitle').textContent = r.Name || key;
+
+  // Meta grid
+  const programDate = r['Program Date']||r.Date||'-';
+  const duration = r['Duration']||'';
+  document.getElementById('modalMeta').innerHTML = `
+    <div class="meta-item"><div class="label">Name</div><div class="value">${r.Name||'-'}</div></div>
+    <div class="meta-item"><div class="label">Hub</div><div class="value">${r.Hub||'-'}</div></div>
+    <div class="meta-item full"><div class="label">Program</div><div class="value">${r['Program Name']||r.Program||'-'}</div></div>
+    <div class="meta-item"><div class="label">Date</div><div class="value">${programDate}${duration?' · '+duration:''}</div></div>
+    <div class="meta-item"><div class="label">Token Amount</div><div class="value" style="color:#0d7d8a;font-weight:700;">${r.Amount||'-'}</div></div>
+    <div class="meta-item"><div class="label">Role</div><div class="value">${r.Role||'-'}</div></div>
+    <div class="meta-item"><div class="label">Signed On</div><div class="value">${sub.timestamp ? new Date(sub.timestamp).toLocaleString('en-MY',{dateStyle:'medium',timeStyle:'short'}) : '-'}</div></div>
+  `;
+
+  // Receipt panel
+  const receiptImg = transferReceipts[key]||'';
+  document.getElementById('modalReceiptBody').innerHTML = receiptImg
+    ? `<img src="${receiptImg}" alt="Transfer receipt" />`
+    : `<div class="evidence-placeholder"><span class="icon">🧾</span><span>No receipt uploaded</span></div>`;
+
+  // Signature panel
+  document.getElementById('modalSignatureBody').innerHTML = sub.signature
+    ? `<img src="${sub.signature}" alt="Signature of ${r.Name}" style="max-height:100px;max-width:90%;object-fit:contain;" />`
+    : `<div class="evidence-placeholder"><span class="icon">—</span><span>No signature found</span></div>`;
+
+  // Open
+  document.getElementById('previewModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePreviewModal() {
+  document.getElementById('previewModal').classList.remove('open');
+  document.body.style.overflow = '';
+  modalCurrentKey = null;
+}
+
+function handleModalBackdropClick(e) {
+  // Close if clicking the backdrop (not the box itself)
+  if (e.target === document.getElementById('previewModal')) closePreviewModal();
+}
+
+function modalDownloadPDF() {
+  if (!modalCurrentKey) return;
+  closePreviewModal();
+  setTimeout(() => downloadSinglePDF(modalCurrentKey), 200);
+}
+
+// ── PDF ───────────────────────────────────────────────────────────────────────
 
 function buildPDFHTML(sub, key) {
   const r = sub.recipient;
