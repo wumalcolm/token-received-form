@@ -195,12 +195,7 @@
 <div class="min-h-screen flex flex-col">
 
   <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between" style="box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-    <svg width="120" height="36" viewBox="0 0 120 36" fill="none">
-      <rect width="36" height="36" rx="6" fill="#0d7d8a"/>
-      <text x="18" y="24" text-anchor="middle" fill="white" font-family="serif" font-size="14" font-weight="bold">SD</text>
-      <text x="46" y="14" fill="#1e293b" font-family="sans-serif" font-size="9" font-weight="600">SARAWAK</text>
-      <text x="46" y="26" fill="#0d7d8a" font-family="sans-serif" font-size="9">DIGITAL</text>
-    </svg>
+    <img src="https://wumalcolm.github.io/token-received-form/Logo-iCube.png" style="height:36px;max-width:140px;object-fit:contain;" alt="iCube Innovation" />
     <div id="hubLogoArea"></div>
   </header>
 
@@ -213,7 +208,6 @@
   <div id="viewRecipient" class="flex-1 flex flex-col items-center p-3 pt-5 pb-10 fade-in">
     <div id="stepLookup" class="card w-full max-w-md" style="padding:20px 16px;">
       <div class="text-center mb-5">
-        <span style="font-size:2rem;">📋</span>
         <h2 class="text-xl mt-2">Token Acknowledgement Form</h2>
         <p class="text-sm text-slate-500 mt-1">Enter your full name exactly as registered.</p>
       </div>
@@ -234,7 +228,9 @@
       </div>
       <div id="recipientDetails" class="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100"></div>
       <div id="alreadySubmitted" class="hidden text-center py-4">
-        <div style="font-size:2rem;">✅</div>
+        <div style="width:48px;height:48px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px auto;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
         <p class="font-semibold text-green-700 mt-2">You have already acknowledged this form.</p>
         <p class="text-sm text-slate-500 mt-1">Thank you! No further action is required.</p>
       </div>
@@ -250,9 +246,11 @@
       </div>
     </div>
 
-    <div id="stepThankYou" class="card w-full max-w-md text-center hidden fade-in" style="padding:32px 16px;margin-top:12px;">
-      <div style="font-size:3rem;">🙏</div>
-      <h2 class="text-xl mt-3 mb-2">Thank You!</h2>
+    <div id="stepThankYou" class="card w-full max-w-md text-center hidden fade-in" style="padding:40px 24px;margin-top:12px;">
+      <div style="width:56px;height:56px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px auto;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2 class="text-xl mb-2">Thank You!</h2>
       <p class="text-sm text-slate-500">Your acknowledgement has been recorded. You may now close this page.</p>
     </div>
   </div>
