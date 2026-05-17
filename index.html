@@ -7,35 +7,47 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root { --sic-primary:#0d7d8a; --bdih-primary:#1a3a2a; --accent:#f59e0b; --surface:#f8f9fb; --border:#e2e8f0; --text:#1e293b; --muted:#64748b; }
+    /* ── iCube Brand Guide Colors ── */
+    :root {
+      --brand-teal:#009fc3;       /* Primary — headings, buttons, brand elements */
+      --brand-cyan:#45c3d3;       /* Accent — hovers, borders, SIC highlight */
+      --brand-charcoal:#58585a;   /* Body copy */
+      --brand-white:#ffffff;      /* Mandatory background */
+      --surface:#f8f9fb;
+      --border:#e2e8f0;
+      --muted:#64748b;
+    }
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html { -webkit-text-size-adjust:100%; }
-    body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--text); min-height:100vh; margin:0; }
-    h1,h2,h3 { font-family:'DM Serif Display',serif; }
+    body { font-family:'Inter',system-ui,-apple-system,sans-serif; background:var(--brand-white); color:var(--brand-charcoal); min-height:100vh; margin:0; }
+    h1,h2,h3 { font-family:'Inter',system-ui,-apple-system,sans-serif; color:var(--brand-teal); font-weight:700; }
     .tab-btn { transition:all 0.2s; padding:12px 8px; font-size:0.875rem; white-space:nowrap; }
-    .tab-btn.active { border-bottom:3px solid var(--accent); color:#1e293b; font-weight:600; }
+    .tab-btn.active { border-bottom:3px solid var(--brand-teal); color:var(--brand-charcoal); font-weight:600; }
     .tab-btn:not(.active) { color:var(--muted); border-bottom:3px solid transparent; }
-    #signatureCanvas { border:2px dashed #cbd5e1; border-radius:8px; cursor:crosshair; touch-action:none; background:#fff; display:block; width:100%; min-height:130px; }
+    #signatureCanvas { border:2px dashed var(--brand-cyan); border-radius:8px; cursor:crosshair; touch-action:none; background:#fff; display:block; width:100%; min-height:130px; }
     #signatureCanvas.signed { border-color:#22c55e; border-style:solid; }
-    .card { background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+    .card { background:var(--brand-white); border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
     .badge-pending { background:#fef3c7; color:#92400e; }
     .badge-submitted { background:#d1fae5; color:#065f46; }
     #pdfTemplate { position:fixed; left:-9999px; top:0; width:794px; background:#fff; z-index:-1; }
     .admin-table { min-width:700px; }
     .admin-table th { background:#f1f5f9; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); padding:10px 12px; white-space:nowrap; }
-    .admin-table td { padding:10px 12px; font-size:0.82rem; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .admin-table td { padding:10px 12px; font-size:0.82rem; border-bottom:1px solid #f1f5f9; vertical-align:middle; color:var(--brand-charcoal); }
     .admin-table tr:last-child td { border-bottom:none; }
-    .admin-table tr:hover td { background:#f8fafc; }
+    .admin-table tr:hover td { background:#f0fafc; }
     button { cursor:pointer; min-height:40px; }
-    input,button { font-family:'DM Sans',sans-serif; }
+    input,button { font-family:'Inter',system-ui,-apple-system,sans-serif; }
     .fade-in { animation:fadeIn 0.4s ease both; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    #toast { position:fixed; bottom:20px; right:16px; left:16px; z-index:9999; padding:12px 18px; border-radius:10px; font-size:0.875rem; font-weight:500; color:#fff; background:#1e293b; box-shadow:0 8px 24px rgba(0,0,0,0.2); transition:opacity 0.3s; opacity:0; pointer-events:none; text-align:center; }
+    #toast { position:fixed; bottom:20px; right:16px; left:16px; z-index:9999; padding:12px 18px; border-radius:10px; font-size:0.875rem; font-weight:500; color:#fff; background:var(--brand-charcoal); box-shadow:0 8px 24px rgba(0,0,0,0.2); transition:opacity 0.3s; opacity:0; pointer-events:none; text-align:center; }
     @media(min-width:640px){ #toast{left:auto;width:auto;max-width:360px;text-align:left;} }
     #toast.show { opacity:1; }
     @media(max-width:640px){ .card{border-radius:12px;} .tab-btn{font-size:0.8rem;padding:10px 6px;} }
+    /* Brand primary button */
+    .btn-primary { background:var(--brand-teal); color:#fff; font-weight:600; border:none; border-radius:8px; padding:10px 20px; transition:background 0.2s; }
+    .btn-primary:hover { background:var(--brand-cyan); }
 
     /* ── Preview Modal ── */
     #previewModal {
@@ -194,7 +206,7 @@
 
 <div class="min-h-screen flex flex-col">
 
-  <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between" style="box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+  <header class="bg-white border-b px-4 py-3 flex items-center justify-between" style="border-color:#e2e8f0;box-shadow:0 1px 4px rgba(0,159,195,0.08)">
     <img src="https://wumalcolm.github.io/token-received-form/Logo%20iCube.png" style="height:36px;max-width:160px;object-fit:contain;" alt="iCube Innovation" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div style="display:none;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#0d7d8a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;">iC</div><div style="font-size:11px;font-weight:700;color:#0d7d8a;">iCube Innovation</div></div>
     <div id="hubLogoArea"></div>
   </header>
@@ -216,7 +228,7 @@
         class="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-400 transition"
         onkeydown="if(event.key==='Enter') lookupRecipient()" />
       <p id="lookupError" class="text-red-500 text-xs mt-2 hidden"></p>
-      <button onclick="lookupRecipient()" class="mt-4 w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg text-sm transition">Verify Identity</button>
+      <button onclick="lookupRecipient()" class="mt-4 w-full text-white font-semibold py-3 rounded-lg text-sm transition" style="background:var(--brand-teal);" onmouseover="this.style.background='var(--brand-cyan)'" onmouseout="this.style.background='var(--brand-teal)'">Verify Identity</button>
       <p class="text-xs text-slate-400 text-center mt-4">Your information is only shown to you.</p>
     </div>
 
@@ -241,7 +253,7 @@
           <button onclick="clearSignature()" class="text-xs text-slate-400 hover:text-red-400">Clear Signature</button>
           <span class="text-xs text-slate-400" id="signHint">Use mouse or finger to sign</span>
         </div>
-        <button onclick="submitForm()" class="mt-4 w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg text-sm transition">Submit Acknowledgement</button>
+        <button onclick="submitForm()" class="mt-4 w-full text-white font-semibold py-3 rounded-lg text-sm transition" style="background:var(--brand-teal);" onmouseover="this.style.background='var(--brand-cyan)'" onmouseout="this.style.background='var(--brand-teal)'">Submit Acknowledgement</button>
         <p class="text-xs text-slate-400 text-center mt-2">By submitting, you confirm receipt of the token stated above.</p>
       </div>
     </div>
@@ -738,7 +750,7 @@ function openPreviewModal(key) {
               <div style="font-size:2rem;">🧾</div>
               <div style="font-size:0.75rem;color:#64748b;text-align:center;">Receipt saved in Google Drive</div>
             </div>
-            <a href="${receiptImg}" target="_blank" style="font-size:0.75rem;font-weight:600;padding:6px 14px;border-radius:8px;background:#0d7d8a;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">🔗 Open Receipt</a>
+            <a href="${receiptImg}" target="_blank" style="font-size:0.75rem;font-weight:600;padding:6px 14px;border-radius:8px;background:#009fc3;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">🔗 Open Receipt</a>
            </div>`
         : `<img src="${receiptImg}" alt="Transfer receipt" />`)
     : `<div class="evidence-placeholder"><span class="icon">🧾</span><span>No receipt uploaded</span></div>`;
@@ -779,72 +791,98 @@ function buildPDFHTML(sub, key) {
     ? 'https://wumalcolm.github.io/token-received-form/Logo-SIC.png'
     : 'https://wumalcolm.github.io/token-received-form/Logo-BDIH.png';
   const footerHTML = hub==='SIC'
-    ? '<strong>SMA | Sarikei Innovation Center</strong><br/>Jalan Nyelong, Bandar Sarikei, 96100 Sarikei, Sarawak<br/>M: +6017 2622101 &nbsp; E: admin@sarikeiinnovation.com &nbsp; W: www.sarikeiinnovation.com'
-    : '<strong>Betong Digital Innovation Hub</strong><br/>1st &amp; 2nd Floor, Sublot 21, Lot 2079, Block 9, Batu Api Land District,<br/>Medan Bandar Baru, 95700 Betong, Sarawak.';
+    ? '<strong>Sarikei Innovation Center</strong><br/>Jalan Nyelong, Bandar Sarikei, 96100 Sarikei, Sarawak<br/>M: +6084-657 691 &nbsp;|&nbsp; E: admin@sarikeiinnovation.com &nbsp;|&nbsp; W: www.sarikeiinnovation.com'
+    : '<strong>Betong Digital Innovation Hub</strong><br/>1st &amp; 2nd Floor, Sublot 21, Lot 2079, Block 9, Batu Api Land District,<br/>Medan Bandar Baru, 95700 Betong, Sarawak.<br/>M: +6083-420 583 &nbsp;|&nbsp; E: admin@betongdih.com &nbsp;|&nbsp; W: www.betongdih.com';
   const programDate = r['Program Date']||r.Date||'-';
   const duration = r['Duration']||'';
   const formattedDate = sub.timestamp ? new Date(sub.timestamp).toLocaleString('en-MY',{dateStyle:'long',timeStyle:'short'}) : '-';
   const receiptImg = transferReceipts[key]||'';
 
-  return `<div style="font-family:Arial,sans-serif;width:794px;height:1123px;padding:40px 60px 24px 60px;box-sizing:border-box;background:#fff;color:#000;display:flex;flex-direction:column;">
-    <div style="margin-bottom:18px;"><img src="${logoSrc}" style="height:52px;max-width:190px;object-fit:contain;" /></div>
-    <div style="font-size:24px;font-weight:400;margin-bottom:20px;letter-spacing:-0.3px;border-bottom:2px solid #e2e8f0;padding-bottom:12px;">Token Received Acknowledgement</div>
+  const hubLogoHTML = hub==='SIC'
+    ? `<div style="display:flex;align-items:center;gap:6px;">
+        <div style="background:#009fc3;border-radius:6px;padding:3px 8px;">
+          <span style="color:#fff;font-weight:700;font-size:12px;font-family:Arial,sans-serif;">S.i.C</span>
+        </div>
+        <div style="line-height:1.3;">
+          <div style="font-size:8px;font-weight:700;color:#009fc3;letter-spacing:0.08em;">SARIKEI</div>
+          <div style="font-size:7px;color:#58585a;">INNOVATION CENTER</div>
+        </div>
+      </div>`
+    : `<div style="display:flex;align-items:center;gap:6px;">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" fill="#f3e8ff"/>
+          <path d="M16 4 C10 4 5 9 5 16 C5 20 7 23.5 10.5 25.5" stroke="#6b21a8" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M16 7 C11.5 7 8 11 8 16 C8 19.5 10 22.5 13 24" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M16 10 C13 10 11 13 11 16 C11 18.5 12.5 20.5 14.5 21.5" stroke="#a855f7" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <circle cx="16" cy="16" r="2.5" fill="#6b21a8"/>
+        </svg>
+        <div style="line-height:1.3;">
+          <div style="font-size:8px;font-weight:700;color:#009fc3;letter-spacing:0.06em;">BETONG DIGITAL</div>
+          <div style="font-size:7px;color:#58585a;">INNOVATION HUB</div>
+        </div>
+      </div>`;
 
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:11px;">
-      <tr>
-        <td style="width:30%;padding:4px 0;color:#555;">Program Name</td>
-        <td style="width:2%;padding:4px 0;">:</td>
-        <td style="padding:4px 0;font-weight:600;">${r['Program Name']||r.Program||'-'}</td>
+  return `<div style="font-family:Arial,sans-serif;width:794px;height:1123px;padding:40px 60px 24px 60px;box-sizing:border-box;background:#ffffff;color:#58585a;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <img src="${logoSrc}" style="height:48px;max-width:180px;object-fit:contain;" />
+      ${hubLogoHTML}
+    </div>
+    <div style="font-size:22px;font-weight:700;color:#009fc3;margin-bottom:18px;letter-spacing:-0.3px;border-bottom:2px solid #45c3d3;padding-bottom:10px;">Token Received</div>
+
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:11px;color:#58585a;">
+      <tr style="border-bottom:1px solid rgba(88,88,90,0.1);">
+        <td style="width:30%;padding:5px 0;color:#58585a;">Program Name</td>
+        <td style="width:2%;padding:5px 0;">:</td>
+        <td style="padding:5px 0;font-weight:600;color:#009fc3;">${r['Program Name']||r.Program||'-'}</td>
       </tr>
-      <tr>
-        <td style="padding:4px 0;color:#555;">Program Date</td>
-        <td style="padding:4px 0;">:</td>
-        <td style="padding:4px 0;">${programDate}${duration?' &nbsp;('+duration+')':''}</td>
+      <tr style="border-bottom:1px solid rgba(88,88,90,0.1);">
+        <td style="padding:5px 0;">Program Date</td>
+        <td style="padding:5px 0;">:</td>
+        <td style="padding:5px 0;">${programDate}${duration?' &nbsp;('+duration+')':''}</td>
       </tr>
-      <tr>
-        <td style="padding:4px 0;color:#555;">Role</td>
-        <td style="padding:4px 0;">:</td>
-        <td style="padding:4px 0;">${r.Role||'-'}</td>
+      <tr style="border-bottom:1px solid rgba(88,88,90,0.1);">
+        <td style="padding:5px 0;">Role</td>
+        <td style="padding:5px 0;">:</td>
+        <td style="padding:5px 0;">${r.Role||'-'}</td>
       </tr>
     </table>
 
-    <div style="font-size:11px;background:#f8fafc;border-left:3px solid #0d7d8a;padding:12px 16px;border-radius:0 6px 6px 0;margin-bottom:32px;line-height:1.8;">
-      I, <strong>${r.Name}</strong>, hereby acknowledge the receipt of a token payment amounting to
-      <strong>${r.Amount||'-'}</strong>, in relation to the above-mentioned program held on
-      <strong>${programDate}</strong>. I confirm that the amount has been duly received.
+    <div style="font-size:11px;background:#f0fafc;border-left:3px solid #009fc3;padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:28px;line-height:1.9;color:#58585a;">
+      I, <strong style="color:#009fc3;">${r.Name}</strong>, acknowledge received a total of
+      <strong style="color:#009fc3;">${r.Amount||'-'}</strong> on the <strong>${programDate}</strong>.
     </div>
 
     <div style="display:flex;gap:40px;margin-bottom:36px;">
       <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:44px;">Verified By:</div>
-        <div style="border-bottom:1px solid #000;width:160px;margin-bottom:6px;">&nbsp;</div>
-        <div style="font-size:10px;line-height:1.7;">Malcolm Wu<br/>Strategic Manager</div>
+        <div style="font-size:11px;font-weight:700;color:#58585a;margin-bottom:44px;">Verified By:</div>
+        <div style="border-bottom:1px solid #58585a;width:160px;margin-bottom:6px;">&nbsp;</div>
+        <div style="font-size:10px;line-height:1.7;color:#58585a;">Malcolm Wu<br/>Strategic Manager</div>
       </div>
       <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:44px;">Approved By:</div>
-        <div style="border-bottom:1px solid #000;width:160px;margin-bottom:6px;">&nbsp;</div>
-        <div style="font-size:10px;line-height:1.7;">Melvin Liew<br/>CEO</div>
+        <div style="font-size:11px;font-weight:700;color:#58585a;margin-bottom:44px;">Approved By:</div>
+        <div style="border-bottom:1px solid #58585a;width:160px;margin-bottom:6px;">&nbsp;</div>
+        <div style="font-size:10px;line-height:1.7;color:#58585a;">Melvin Liew<br/>CEO</div>
       </div>
     </div>
 
     <div style="display:flex;gap:30px;align-items:flex-start;">
       <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:8px;">Received By:</div>
+        <div style="font-size:11px;font-weight:700;color:#58585a;margin-bottom:8px;">Received By:</div>
         <div style="height:56px;display:flex;align-items:flex-end;"><img src="${sub.signature}" style="max-height:52px;max-width:160px;object-fit:contain;" /></div>
-        <div style="border-bottom:1px solid #000;width:200px;margin-bottom:6px;">&nbsp;</div>
-        <div style="font-size:10px;font-weight:600;">${r.Name}</div>
-        <div style="font-size:9px;color:#555;margin-top:2px;">Digitally signed on ${formattedDate}</div>
+        <div style="border-bottom:1px solid #58585a;width:200px;margin-bottom:6px;">&nbsp;</div>
+        <div style="font-size:10px;font-weight:600;color:#009fc3;">${r.Name}</div>
+        <div style="font-size:9px;color:#58585a;margin-top:2px;">Digitally signed on ${formattedDate}</div>
       </div>
       <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:8px;">Transfer Receipt:</div>
+        <div style="font-size:11px;font-weight:700;color:#58585a;margin-bottom:8px;">Transfer Receipt:</div>
         ${receiptImg
-          ? `<div style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;max-width:240px;"><img src="${receiptImg}" style="width:100%;max-height:260px;object-fit:contain;display:block;background:#fff;" /></div>`
-          : '<div style="width:240px;height:130px;border:1.5px dashed #cbd5e1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8fafc;"><div style="font-size:20px;">🧾</div><div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:4px;">No receipt uploaded</div></div>'
+          ? `<div style="border:1px solid #45c3d3;border-radius:6px;overflow:hidden;max-width:240px;"><img src="${receiptImg}" style="width:100%;max-height:260px;object-fit:contain;display:block;background:#fff;" /></div>`
+          : '<div style="width:240px;height:130px;border:1.5px dashed #45c3d3;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f0fafc;"><div style="font-size:9px;color:#009fc3;text-align:center;">No receipt uploaded</div></div>'
         }
       </div>
     </div>
     <div style="flex:1;"></div>
-    <div style="border-top:1px solid #ccc;padding-top:10px;text-align:center;font-size:8.5px;color:#555;line-height:2;">${footerHTML}</div>
+    <div style="border-top:2px solid #45c3d3;padding-top:10px;text-align:center;font-size:8.5px;color:#58585a;line-height:2;">${footerHTML}</div>
   </div>`;
 }
 
@@ -876,15 +914,37 @@ async function downloadAllPDFs() {
 function updateHubBranding(hub) {
   const area = document.getElementById('hubLogoArea');
   if (hub==='SIC') {
-    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#0d7d8a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;">SIC</div><div><div style="font-size:10px;font-weight:700;color:#0d7d8a;">SARIKEI</div><div style="font-size:9px;color:#888;">Innovation Center</div></div></div>';
+    // Brand guide: teal rounded rectangle with "S.i.C" in white + "SARIKEI INNOVATION CENTER"
+    area.innerHTML = `<div style="display:flex;align-items:center;gap:8px;">
+      <div style="background:#009fc3;border-radius:8px;padding:4px 10px;display:flex;align-items:center;justify-content:center;">
+        <span style="color:#fff;font-weight:700;font-size:13px;font-family:Inter,sans-serif;letter-spacing:0.5px;">S.i.C</span>
+      </div>
+      <div style="line-height:1.2;">
+        <div style="font-size:9px;font-weight:700;color:#009fc3;letter-spacing:0.08em;">SARIKEI</div>
+        <div style="font-size:8px;color:#58585a;letter-spacing:0.05em;">INNOVATION CENTER</div>
+      </div>
+    </div>`;
   } else {
-    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;background:#1a3a2a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;">BDIH</div><div><div style="font-size:10px;font-weight:700;color:#1a3a2a;">BETONG</div><div style="font-size:9px;color:#888;">Digital Innovation Hub</div></div></div>';
+    // Brand guide: BDIH with purple circular swirl SVG + text
+    area.innerHTML = `<div style="display:flex;align-items:center;gap:8px;">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="15" fill="#6b21a8" opacity="0.1"/>
+        <path d="M16 4 C10 4 5 9 5 16 C5 20 7 23.5 10.5 25.5" stroke="#6b21a8" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M16 7 C11.5 7 8 11 8 16 C8 19.5 10 22.5 13 24" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M16 10 C13 10 11 13 11 16 C11 18.5 12.5 20.5 14.5 21.5" stroke="#a855f7" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <circle cx="16" cy="16" r="2.5" fill="#6b21a8"/>
+      </svg>
+      <div style="line-height:1.2;">
+        <div style="font-size:9px;font-weight:700;color:#009fc3;letter-spacing:0.06em;">BETONG DIGITAL</div>
+        <div style="font-size:8px;color:#58585a;letter-spacing:0.04em;">INNOVATION HUB</div>
+      </div>
+    </div>`;
   }
 }
 
 function showToast(msg, type='info') {
   const t = document.getElementById('toast');
-  const colors = {success:'#16a34a',error:'#dc2626',warn:'#d97706',info:'#0d7d8a'};
+  const colors = {success:'#16a34a',error:'#dc2626',warn:'#d97706',info:'#009fc3'};
   t.style.background = colors[type]||'#1e293b';
   t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3500);
