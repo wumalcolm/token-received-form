@@ -776,10 +776,11 @@ function handleModalBackdropClick(e) {
   if (e.target === document.getElementById('previewModal')) closePreviewModal();
 }
 
-function modalDownloadPDF() {
+async function modalDownloadPDF() {
   if (!modalCurrentKey) return;
+  const key = modalCurrentKey;
   closePreviewModal();
-  setTimeout(() => downloadSinglePDF(modalCurrentKey), 200);
+  await downloadSinglePDF(key);
 }
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
@@ -886,18 +887,40 @@ function buildPDFHTML(sub, key, receiptData) {
 }
 
 async function fetchImageAsBase64(url) {
-  try {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = () => resolve('');
-      reader.readAsDataURL(blob);
-    });
-  } catch(e) {
-    return '';
+  // Convert Drive view URL to export/download URL which has better CORS support
+  // drive.google.com/uc?export=view&id=FILE_ID → drive.google.com/thumbnail?id=FILE_ID&sz=w800
+  const driveIdMatch = url.match(/[?&]id=([^&]+)/);
+  if (driveIdMatch) {
+    const fileId = driveIdMatch[1];
+    // Use thumbnail URL - this works cross-origin
+    const thumbUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+    try {
+      const res = await fetch(thumbUrl, { mode: 'cors' });
+      if (res.ok) {
+        const blob = await res.blob();
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => resolve('');
+          reader.readAsDataURL(blob);
+        });
+      }
+    } catch(e) {}
   }
+  // Fallback: try direct fetch
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (res.ok) {
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch(e) {}
+  return '';
 }
 
 async function downloadSinglePDF(key) {
