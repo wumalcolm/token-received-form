@@ -505,6 +505,7 @@ async function submitForm() {
   localStorage.setItem('icube_submissions', JSON.stringify(submissions));
   document.getElementById('stepSign').classList.add('hidden');
   document.getElementById('stepThankYou').classList.remove('hidden');
+  document.getElementById('hubLogoArea').innerHTML = '';
 }
 
 function checkPin() {
@@ -649,25 +650,37 @@ function uploadReceipt(key, input) {
     const dataUrl = e.target.result;
     const img = new Image();
     img.onload = function() {
-      // Hard compress until under Google Sheets 50k char cell limit
+      // Strategy: keep higher resolution for text legibility, reduce quality aggressively
+      // Bank receipts are text-heavy = compress well even at low quality
       const MAX_CHARS = 43000;
       let result = '';
-      let q = 0.4;
-      let dim = 300;
       
-      for (let attempt = 0; attempt < 10; attempt++) {
+      // Try progressively: start at 600px high quality, step down quality first, then size
+      const attempts = [
+        { dim: 600, q: 0.3 },
+        { dim: 600, q: 0.2 },
+        { dim: 500, q: 0.2 },
+        { dim: 500, q: 0.15 },
+        { dim: 400, q: 0.15 },
+        { dim: 400, q: 0.1 },
+        { dim: 300, q: 0.1 },
+        { dim: 250, q: 0.1 },
+        { dim: 200, q: 0.1 },
+        { dim: 150, q: 0.1 },
+      ];
+
+      for (let i = 0; i < attempts.length; i++) {
+        const { dim, q } = attempts[i];
         const c = document.createElement('canvas');
         const s = Math.min(1, dim / Math.max(img.width, img.height));
         c.width  = Math.max(1, Math.round(img.width  * s));
         c.height = Math.max(1, Math.round(img.height * s));
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
         result = c.toDataURL('image/jpeg', q);
-        console.log(`Attempt ${attempt+1}: ${dim}px q${q.toFixed(1)} → ${result.length} chars`);
+        console.log(`Attempt ${i+1}: ${dim}px q${q} → ${result.length} chars`);
         if (result.length <= MAX_CHARS) break;
-        dim = Math.max(100, dim - 50);
-        q   = Math.max(0.1, q   - 0.05);
       }
-      
+
       console.log(`Final: ~${Math.round(result.length*0.75/1024)}KB, ${result.length} chars`);
       sendReceiptToSheet(key, result);
     };
@@ -859,7 +872,7 @@ function buildPDFHTML(sub, key, receiptData) {
       <div style="flex:1;">
         <div style="font-size:11px;font-weight:700;color:#58585a;margin-bottom:8px;">Transfer Receipt:</div>
         ${receiptImg
-          ? `<div style="border:1px solid #45c3d3;border-radius:6px;overflow:hidden;max-width:240px;"><img src="${receiptImg}" style="width:100%;max-height:260px;object-fit:contain;display:block;background:#fff;" /></div>`
+          ? `<div style="border:1px solid #45c3d3;border-radius:6px;overflow:hidden;max-width:240px;"><img src="${receiptImg}" style="width:100%;max-height:320px;object-fit:contain;display:block;background:#fff;" /></div>`
           : '<div style="width:240px;height:130px;border:1.5px dashed #45c3d3;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f0fafc;"><div style="font-size:9px;color:#009fc3;text-align:center;">No receipt uploaded</div></div>'
         }
       </div>
