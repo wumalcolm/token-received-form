@@ -784,7 +784,7 @@ function modalDownloadPDF() {
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
 
-function buildPDFHTML(sub, key) {
+function buildPDFHTML(sub, key, receiptData) {
   const r = sub.recipient;
   const hub = (r.Hub||'').toUpperCase().includes('SIC') ? 'SIC' : 'BDIH';
   const logoSrc = hub==='SIC'
@@ -796,7 +796,7 @@ function buildPDFHTML(sub, key) {
   const programDate = r['Program Date']||r.Date||'-';
   const duration = r['Duration']||'';
   const formattedDate = sub.timestamp ? new Date(sub.timestamp).toLocaleString('en-MY',{dateStyle:'long',timeStyle:'short'}) : '-';
-  const receiptImg = transferReceipts[key]||'';
+  const receiptImg = receiptData !== undefined ? receiptData : (transferReceipts[key]||'');
 
   const hubLogoHTML = hub==='SIC'
     ? `<div style="display:flex;align-items:center;gap:6px;">
@@ -825,7 +825,6 @@ function buildPDFHTML(sub, key) {
   return `<div style="font-family:Arial,sans-serif;width:794px;height:1123px;padding:40px 60px 24px 60px;box-sizing:border-box;background:#ffffff;color:#58585a;display:flex;flex-direction:column;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
       <img src="${logoSrc}" style="height:48px;max-width:180px;object-fit:contain;" />
-      ${hubLogoHTML}
     </div>
     <div style="font-size:22px;font-weight:700;color:#009fc3;margin-bottom:18px;letter-spacing:-0.3px;border-bottom:2px solid #45c3d3;padding-bottom:10px;">Token Received</div>
 
@@ -886,11 +885,36 @@ function buildPDFHTML(sub, key) {
   </div>`;
 }
 
-function downloadSinglePDF(key) {
+async function fetchImageAsBase64(url) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(blob);
+    });
+  } catch(e) {
+    return '';
+  }
+}
+
+async function downloadSinglePDF(key) {
   const sub = submissions[key];
   if (!sub) { showToast('No submission found.','error'); return; }
+  showToast('Preparing PDF…', 'info');
+
+  // Pre-fetch receipt image as base64 if it's a Drive URL
+  let receiptData = transferReceipts[key] || '';
+  if (receiptData.startsWith('https://')) {
+    showToast('Fetching receipt image…', 'info');
+    const fetched = await fetchImageAsBase64(receiptData);
+    if (fetched) receiptData = fetched;
+  }
+
   const container = document.getElementById('pdfTemplate');
-  container.innerHTML = buildPDFHTML(sub, key);
+  container.innerHTML = buildPDFHTML(sub, key, receiptData);
   const opt = { margin:0, filename:`TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} };
   html2pdf().set(opt).from(container.firstElementChild).save().then(()=>{ container.innerHTML=''; showToast('PDF downloaded.','success'); });
 }
@@ -900,10 +924,14 @@ async function downloadAllPDFs() {
   if (keys.length===0) { showToast('No signed forms to download.','warn'); return; }
   showToast('Generating '+keys.length+' PDFs...','info');
   for (const key of keys) {
-    await new Promise(resolve => {
+    await new Promise(async resolve => {
       const sub = submissions[key];
+      let receiptData = transferReceipts[key] || '';
+      if (receiptData.startsWith('https://')) {
+        receiptData = await fetchImageAsBase64(receiptData) || receiptData;
+      }
       const container = document.getElementById('pdfTemplate');
-      container.innerHTML = buildPDFHTML(sub, key);
+      container.innerHTML = buildPDFHTML(sub, key, receiptData);
       const opt = { margin:0, filename:`TokenForm_${sub.name.replace(/\s+/g,'_')}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} };
       html2pdf().set(opt).from(container.firstElementChild).save().then(()=>{ container.innerHTML=''; setTimeout(resolve,800); });
     });
